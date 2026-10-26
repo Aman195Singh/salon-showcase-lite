@@ -1,0 +1,181 @@
+/* ===== AUTH PAGES (Login + Signup) ===== */
+
+.page {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, var(--color-bg) 0%, var(--color-bg-alt) 100%);
+  padding: var(--space-6);
+}
+
+.card {
+  width: 100%;
+  max-width: 440px;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-xl);
+  padding: var(--space-10) var(--space-8);
+  box-shadow: var(--shadow-lg);
+}
+
+/* --- Brand --- */
+.brand {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  margin-bottom: var(--space-8);
+}
+
+.brandIcon {
+  font-size: var(--text-xl);
+  color: var(--color-primary);
+}
+
+.brandName {
+  font-family: var(--font-heading);
+  font-size: var(--text-xl);
+  font-weight: var(--font-bold);
+  letter-spacing: 0.04em;
+}
+
+/* --- Title --- */
+.title {
+  text-align: center;
+  font-size: var(--text-2xl);
+  margin-bottom: var(--space-2);
+}
+
+.subtitle {
+  text-align: center;
+  font-size: var(--text-sm);
+  color: var(--color-text-secondary);
+  margin-bottom: var(--space-6);
+  line-height: var(--leading-relaxed);
+}
+
+/* --- Form --- */
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+}
+
+.inputWrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.inputIcon {
+  position: absolute;
+  left: var(--space-3);
+  color: var(--color-text-tertiary);
+  pointer-events: none;
+  z-index: 1;
+}
+
+.inputWithIcon {
+  padding-left: var(--space-10) !important;
+}
+
+.togglePassword {
+  position: absolute;
+  right: var(--space-3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-text-tertiary);
+  cursor: pointer;
+  padding: var(--space-1);
+  border-radius: var(--radius-sm);
+  transition: color var(--transition-fast);
+  z-index: 1;
+}
+.togglePassword:hover {
+  color: var(--color-text);
+}
+
+.labelRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.forgotLink {
+  font-size: var(--text-xs);
+  color: var(--color-primary);
+  text-decoration: none;
+}
+.forgotLink:hover {
+  text-decoration: underline;
+}
+
+/* --- Error --- */
+.error {
+  background: rgba(180, 65, 65, 0.08);
+  color: var(--color-error);
+  font-size: var(--text-sm);
+  padding: var(--space-3) var(--space-4);
+  border-radius: var(--radius-md);
+  margin-bottom: var(--space-4);
+  text-align: center;
+  line-height: var(--leading-relaxed);
+}
+
+/* --- Success state (signup) --- */
+.successIcon {
+  display: flex;
+  justify-content: center;
+  color: var(--color-success);
+  margin-bottom: var(--space-5);
+}
+
+.note {
+  text-align: center;
+  font-size: var(--text-xs);
+  color: var(--color-text-tertiary);
+  background: var(--color-bg-alt);
+  padding: var(--space-3) var(--space-4);
+  border-radius: var(--radius-md);
+  line-height: var(--leading-relaxed);
+  margin-top: var(--space-4);
+}
+
+/* --- Footer links --- */
+.footer {
+  text-align: center;
+  font-size: var(--text-sm);
+  color: var(--color-text-secondary);
+  margin-top: var(--space-6);
+}
+
+.footerLink {
+  color: var(--color-primary);
+  font-weight: var(--font-semibold);
+  text-decoration: none;
+}
+.footerLink:hover {
+  text-decoration: underline;
+}
+
+.backLink {
+  display: block;
+  text-align: center;
+  font-size: var(--text-sm);
+  color: var(--color-text-tertiary);
+  margin-top: var(--space-5);
+  text-decoration: none;
+}
+.backLink:hover {
+  color: var(--color-primary);
+}
+
+/* --- Responsive --- */
+@media (max-width: 480px) {
+  .card {
+    padding: var(--space-8) var(--space-5);
+    border-radius: var(--radius-lg);
+  }
+}

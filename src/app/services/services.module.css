@@ -1,0 +1,206 @@
+/* ===== SERVICES PAGE ===== */
+
+.hero {
+  background: var(--color-bg-alt);
+  padding: var(--space-16) 0 var(--space-12);
+  text-align: center;
+}
+
+.heroTitle {
+  margin-bottom: var(--space-4);
+}
+
+.heroDesc {
+  max-width: 600px;
+  margin: 0 auto;
+  font-size: var(--text-md);
+  color: var(--color-text-secondary);
+}
+
+/* --- Categories --- */
+.category {
+  margin-bottom: var(--space-12);
+}
+.category:last-child {
+  margin-bottom: 0;
+}
+
+.categoryHeader {
+  margin-bottom: var(--space-6);
+  padding-bottom: var(--space-4);
+  border-bottom: 2px solid var(--color-primary);
+}
+
+.categoryName {
+  font-size: var(--text-2xl);
+  margin-bottom: var(--space-2);
+}
+
+.categoryDesc {
+  font-size: var(--text-sm);
+  color: var(--color-text-secondary);
+}
+
+/* --- Service rows --- */
+.servicesList {
+  display: flex;
+  flex-direction: column;
+}
+
+.serviceRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: var(--space-5) 0;
+  border-bottom: 1px solid var(--color-border-light);
+  gap: var(--space-6);
+  transition: background var(--transition-fast);
+}
+.serviceRow:hover {
+  background: var(--color-surface-hover);
+  margin: 0 calc(-1 * var(--space-4));
+  padding-left: var(--space-4);
+  padding-right: var(--space-4);
+  border-radius: var(--radius-md);
+}
+
+.serviceInfo {
+  flex: 1;
+}
+
+.serviceName {
+  font-family: var(--font-body);
+  font-size: var(--text-base);
+  font-weight: var(--font-semibold);
+  margin-bottom: var(--space-1);
+}
+
+.serviceDesc {
+  font-size: var(--text-sm);
+  color: var(--color-text-tertiary);
+}
+
+.serviceMeta {
+  display: flex;
+  align-items: center;
+  gap: var(--space-6);
+  flex-shrink: 0;
+}
+
+.serviceDuration {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  font-size: var(--text-sm);
+  color: var(--color-text-tertiary);
+}
+
+.servicePrice {
+  font-size: var(--text-lg);
+  font-weight: var(--font-bold);
+  color: var(--color-primary);
+  min-width: 80px;
+  text-align: right;
+}
+
+.bookServiceBtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 6px 14px;
+  background: var(--color-primary);
+  color: #FFFFFF;
+  border-radius: var(--radius-md, 8px);
+  font-size: var(--text-xs, 0.75rem);
+  font-weight: var(--font-semibold, 600);
+  text-decoration: none;
+  transition: all var(--transition-fast, 0.2s);
+  white-space: nowrap;
+}
+
+.bookServiceBtn:hover {
+  background: var(--color-primary-dark);
+  transform: translateY(-1px);
+}
+
+/* --- Policies --- */
+.policiesSection {
+  background: var(--color-bg);
+}
+
+.policiesCard {
+  background: var(--color-bg-alt);
+  border-radius: var(--radius-lg);
+  padding: var(--space-8);
+  border: 1px solid var(--color-border-light);
+}
+
+.policiesTitle {
+  font-family: var(--font-body);
+  font-size: var(--text-lg);
+  font-weight: var(--font-semibold);
+  margin-bottom: var(--space-4);
+}
+
+.policiesList {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  list-style: disc;
+  padding-left: var(--space-5);
+}
+.policiesList li {
+  font-size: var(--text-sm);
+  color: var(--color-text-secondary);
+  line-height: var(--leading-relaxed);
+}
+
+/* --- CTA --- */
+.ctaSection {
+  background: linear-gradient(135deg, #2C2419 0%, #4A3B2A 100%);
+  padding: var(--space-16) 0;
+}
+
+.ctaInner {
+  text-align: center;
+}
+
+.ctaTitle {
+  color: #FDFBF8;
+  margin-bottom: var(--space-3);
+}
+
+.ctaDesc {
+  color: rgba(253, 251, 248, 0.7);
+  font-size: var(--text-md);
+  margin-bottom: var(--space-8);
+}
+
+/* --- Responsive --- */
+@media (max-width: 767px) {
+  .hero {
+    padding: var(--space-10) 0 var(--space-8);
+  }
+
+  .serviceRow {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--space-3);
+  }
+
+  .serviceMeta {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .servicePrice {
+    text-align: left;
+    min-width: auto;
+  }
+
+  .serviceRow:hover {
+    margin: 0;
+    padding-left: 0;
+    padding-right: 0;
+  }
+}
