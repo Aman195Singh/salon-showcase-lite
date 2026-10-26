@@ -177,7 +177,17 @@ export default function Header() {
                 aria-expanded={dropdownOpen}
                 aria-label="User Account Menu"
               >
-                <div className={styles.avatarCircle}>{avatarLetter}</div>
+                <div className={styles.avatarCircle}>
+                  {profile?.avatar_url ? (
+                    <img
+                      src={profile.avatar_url}
+                      alt={displayName}
+                      className={styles.avatarImg}
+                    />
+                  ) : (
+                    avatarLetter
+                  )}
+                </div>
                 <span className={styles.avatarNameShort}>{displayName}</span>
                 <HiOutlineChevronDown
                   size={14}
@@ -191,8 +201,23 @@ export default function Header() {
               {dropdownOpen && (
                 <div className={styles.profileDropdown}>
                   <div className={styles.dropdownUserHeader}>
-                    <div className={styles.dropdownUserName}>{displayName}</div>
-                    <div className={styles.dropdownUserEmail}>{user.email}</div>
+                    <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "8px" }}>
+                      <div className={styles.avatarCircleSmall}>
+                        {profile?.avatar_url ? (
+                          <img
+                            src={profile.avatar_url}
+                            alt={displayName}
+                            className={styles.avatarImg}
+                          />
+                        ) : (
+                          avatarLetter
+                        )}
+                      </div>
+                      <div style={{ minWidth: 0, flex: 1 }}>
+                        <div className={styles.dropdownUserName}>{displayName}</div>
+                        <div className={styles.dropdownUserEmail}>{user.email}</div>
+                      </div>
+                    </div>
                     <div>
                       {isOwner ? (
                         <span className={styles.roleBadgeOwner}>
@@ -272,80 +297,104 @@ export default function Header() {
         className={`${styles.mobileNav} ${menuOpen ? styles.mobileNavOpen : ""}`}
         aria-label="Mobile navigation"
       >
-        {BASE_NAV_LINKS.map((link) => (
-          <Link
-            key={link.href}
-            href={link.href}
-            className={`${styles.mobileLink} ${
-              pathname === link.href ? styles.active : ""
-            }`}
-            onClick={() => setMenuOpen(false)}
-          >
-            {link.label}
-          </Link>
-        ))}
+        {/* Top Profile Section in Drawer */}
+        <div className={styles.mobileNavProfile}>
+          <div className={styles.mobileAvatarCircle}>
+            {user && profile?.avatar_url ? (
+              <img
+                src={profile.avatar_url}
+                alt={displayName}
+                className={styles.avatarImg}
+              />
+            ) : user ? (
+              <span className={styles.avatarLetterLarge}>{avatarLetter}</span>
+            ) : (
+              <HiOutlineUser size={28} className={styles.guestIcon} />
+            )}
+          </div>
+          <div className={styles.mobileUserName}>
+            {user ? displayName : "Welcome, Guest"}
+          </div>
+          {user ? (
+            <div className={styles.mobileUserSub}>
+              <span>{user.email}</span>
+              {isOwner && (
+                <span className={styles.mobileRoleBadge}>👑 Owner</span>
+              )}
+            </div>
+          ) : (
+            <Link
+              href="/login"
+              className={styles.mobileSignInPrompt}
+              onClick={() => setMenuOpen(false)}
+            >
+              Sign in or create account →
+            </Link>
+          )}
+        </div>
 
-        {/* Admin Link on Mobile if Owner */}
-        {isOwner && (
-          <Link
-            href="/dashboard"
-            className={`${styles.mobileLink}`}
-            style={{
-              background: "rgba(245, 158, 11, 0.1)",
-              color: "#b45309",
-              fontWeight: "700",
-            }}
-            onClick={() => setMenuOpen(false)}
-          >
-            👑 Admin Panel
-          </Link>
-        )}
+        {/* Thoda Gap / Divider */}
+        <div className={styles.mobileNavDivider} />
 
-        {/* User Account / Sign In on Mobile */}
-        {user ? (
-          <>
+        {/* Saare Menu Tabs */}
+        <div className={styles.mobileNavLinks}>
+          {BASE_NAV_LINKS.map((link) => (
+            <Link
+              key={link.href}
+              href={link.href}
+              className={`${styles.mobileLink} ${
+                pathname === link.href ? styles.active : ""
+              }`}
+              onClick={() => setMenuOpen(false)}
+            >
+              {link.label}
+            </Link>
+          ))}
+
+          {/* Admin Link on Mobile if Owner */}
+          {isOwner && (
+            <Link
+              href="/dashboard"
+              className={`${styles.mobileLink} ${styles.mobileAdminLink}`}
+              onClick={() => setMenuOpen(false)}
+            >
+              👑 Admin Dashboard
+            </Link>
+          )}
+
+          {/* User Account / Profile link */}
+          {user && (
             <Link
               href="/account"
               className={styles.mobileLink}
               onClick={() => setMenuOpen(false)}
             >
-              👤 My Account ({displayName})
+              ⚙️ My Account & Profile
             </Link>
-            <button
-              onClick={handleSignOut}
-              className={styles.mobileLink}
-              style={{
-                textAlign: "left",
-                background: "none",
-                border: "none",
-                color: "#dc2626",
-                cursor: "pointer",
-                width: "100%",
-              }}
-            >
-              🚪 Sign Out
-            </button>
-          </>
-        ) : (
-          <Link
-            href="/login"
-            className={styles.mobileLink}
-            onClick={() => setMenuOpen(false)}
-          >
-            🔑 Sign In / Register
-          </Link>
-        )}
+          )}
+        </div>
 
+        {/* Baad me button book appointment ka */}
         <div className={styles.mobileCta}>
           <Link
             href="/contact"
             className="btn btn-primary btn-lg"
-            style={{ width: "100%" }}
+            style={{ width: "100%", justifyContent: "center" }}
             onClick={() => setMenuOpen(false)}
           >
             <HiOutlineCalendar size={18} />
             Book Consultation
           </Link>
+
+          {user && (
+            <button
+              onClick={handleSignOut}
+              className={styles.mobileSignOutBtn}
+            >
+              <HiOutlineLogout size={16} />
+              <span>Sign Out</span>
+            </button>
+          )}
         </div>
       </nav>
     </header>

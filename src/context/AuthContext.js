@@ -110,6 +110,16 @@ export function AuthProvider({ children }) {
     setProfile(null);
   };
 
+  /** Manually refresh the user profile data */
+  const refreshProfile = async () => {
+    if (user?.id) {
+      const prof = await fetchProfile(user.id);
+      setProfile(prof);
+      return prof;
+    }
+    return null;
+  };
+
   const isOwner =
     profile?.role === "owner" ||
     user?.user_metadata?.role === "owner" ||
@@ -119,7 +129,16 @@ export function AuthProvider({ children }) {
 
   return (
     <AuthContext.Provider
-      value={{ user, profile, loading, isOwner, signIn, signUp, signOut }}
+      value={{
+        user,
+        profile,
+        loading,
+        isOwner,
+        signIn,
+        signUp,
+        signOut,
+        refreshProfile,
+      }}
     >
       {children}
     </AuthContext.Provider>

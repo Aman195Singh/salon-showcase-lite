@@ -11,6 +11,7 @@ import {
   HiOutlineAdjustments,
   HiOutlineCalendar,
   HiOutlineShieldCheck,
+  HiOutlineCamera,
 } from "react-icons/hi";
 import { useAuth } from "@/context/AuthContext";
 import { supabase } from "@/lib/supabase";
@@ -18,14 +19,22 @@ import styles from "./account.module.css";
 
 export default function AccountPage() {
   const router = useRouter();
-  const { user, profile, isOwner, loading } = useAuth();
+  const { user, profile, isOwner, loading, refreshProfile } = useAuth();
 
-  const [activeTab, setActiveTab] = useState("profile"); // 'profile' | 'security' | 'history'
+  const [activeTab, setActiveTab] = useState("profile"); // 'appointments' | 'profile' | 'security' | 'history'
+
+  // Appointments
+  
 
   // Profile Form
   const [fullName, setFullName] = useState("");
   const [savingProfile, setSavingProfile] = useState(false);
   const [profileAlert, setProfileAlert] = useState(null);
+
+  // Avatar Upload State
+  const [avatarUrl, setAvatarUrl] = useState("");
+  const [uploadingAvatar, setUploadingAvatar] = useState(false);
+  const [avatarMessage, setAvatarMessage] = useState(null);
 
   // Password Form
   const [newPassword, setNewPassword] = useState("");
@@ -51,6 +60,11 @@ export default function AccountPage() {
       setFullName(profile.full_name);
     } else if (user?.user_metadata?.full_name) {
       setFullName(user.user_metadata.full_name);
+    }
+    if (profile?.avatar_url) {
+      setAvatarUrl(profile.avatar_url);
+    } else {
+      setAvatarUrl("");
     }
   }, [profile, user]);
 
@@ -86,82 +100,151 @@ export default function AccountPage() {
   };
 
   // Fetch appointments for this customer
-  const fetchUserAppointments = async () => {
-    if (!user) return;
-    setLoadingAppointments(true);
-    setAppointmentsError(null);
-    try {
-      const { data, error } = await supabase
-        .from("appointments")
-        .select(`
-          id,
-          booking_reference,
-          starts_at,
-          ends_at,
-          status,
-          customer_notes,
-          staff (display_name),
-          appointment_services (service_name_snapshot, duration_minutes_snapshot, price_paise_snapshot),
-          customers!inner (email, phone)
-        `)
-        .eq("customers.email", user.email)
-        .order("starts_at", { ascending: false });
-
-      if (error) {
-        // Fallback for demonstration if user has sample reservation
-        setAppointments([
-          {
-            id: "appt-sample-1",
-            booking_reference: "AL-BK-82A4N",
-            starts_at: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
-            status: "confirmed",
-            staff_name: "Priya Sharma",
-            service_name: "Haircut — Men",
-            price: "₹450",
-            phone: "9876543210",
-          },
-        ]);
-      } else {
-        const mapped = (data || []).map((a) => ({
-          id: a.id,
-          booking_reference: a.booking_reference,
-          starts_at: a.starts_at,
-          ends_at: a.ends_at,
-          status: a.status,
-          customer_notes: a.customer_notes,
-          staff_name: a.staff?.display_name || "Specialist",
-          service_name: a.appointment_services?.[0]?.service_name_snapshot || "Salon Service",
-          price: a.appointment_services?.[0]?.price_paise_snapshot
-            ? `₹${a.appointment_services[0].price_paise_snapshot / 100}`
-            : "—",
-          phone: a.customers?.phone || "",
-        }));
-        setAppointments(mapped);
-      }
-    } catch {
-      setAppointments([
-        {
-          id: "appt-sample-1",
-          booking_reference: "AL-BK-82A4N",
-          starts_at: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
-          status: "confirmed",
-          staff_name: "Priya Sharma",
-          service_name: "Haircut — Men",
-          price: "₹450",
-          phone: "9876543210",
-        },
-      ]);
-    } finally {
-      setLoadingAppointments(false);
-    }
-  };
+  
 
   useEffect(() => {
     if (user) {
       fetchUserEnquiries();
-      fetchUserAppointments();
+      
     }
   }, [user]);
+
+  // Handle Profile Photo Upload & Sanitation
+  const handleAvatarFileChange = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setAvatarMessage(null);
+
+    // 1. Strictly validate MIME types
+    const validTypes = ["image/jpeg", "image/png", "image/webp"];
+    if (!validTypes.includes(file.type)) {
+      setAvatarMessage({
+        type: "error",
+        text: "Please select a valid image file (JPG, PNG, or WEBP only).",
+      });
+      return;
+    }
+
+    // 2. Validate max raw file size (5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      setAvatarMessage({
+        type: "error",
+        text: "File size exceeds 5MB limit. Please choose a smaller image.",
+      });
+      return;
+    }
+
+    setUploadingAvatar(true);
+
+    try {
+      // 3. Client-side Canvas Sanitization: Strips EXIF metadata & script payloads,
+      // and creates an ultra-lightweight 256x256 square thumbnail.
+      const sanitizedDataUrl = await new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = (event) => {
+          const img = new Image();
+          img.onload = () => {
+            const canvas = document.createElement("canvas");
+            const TARGET_SIZE = 256;
+            canvas.width = TARGET_SIZE;
+            canvas.height = TARGET_SIZE;
+            const ctx = canvas.getContext("2d");
+
+            // Crop to center square
+            const minDim = Math.min(img.width, img.height);
+            const startX = (img.width - minDim) / 2;
+            const startY = (img.height - minDim) / 2;
+
+            ctx.drawImage(
+              img,
+              startX,
+              startY,
+              minDim,
+              minDim,
+              0,
+              0,
+              TARGET_SIZE,
+              TARGET_SIZE
+            );
+
+            // Export pure sanitized JPEG (~25-35KB)
+            const compressed = canvas.toDataURL("image/jpeg", 0.85);
+            resolve(compressed);
+          };
+          img.onerror = () => reject(new Error("Failed to process image."));
+          img.src = event.target.result;
+        };
+        reader.onerror = () => reject(new Error("Failed to read image file."));
+        reader.readAsDataURL(file);
+      });
+
+      // 4. Update Supabase profile
+      const { error } = await supabase
+        .from("profiles")
+        .update({
+          avatar_url: sanitizedDataUrl,
+          updated_at: new Date().toISOString(),
+        })
+        .eq("id", user.id);
+
+      if (error) throw error;
+
+      setAvatarUrl(sanitizedDataUrl);
+      if (refreshProfile) {
+        await refreshProfile();
+      }
+
+      setAvatarMessage({
+        type: "success",
+        text: "🎉 Profile picture updated successfully!",
+      });
+    } catch (err) {
+      console.error("Avatar upload error:", err);
+      setAvatarMessage({
+        type: "error",
+        text: err.message || "Failed to save profile picture. Please try again.",
+      });
+    } finally {
+      setUploadingAvatar(false);
+      e.target.value = "";
+    }
+  };
+
+  // Handle Remove Photo
+  const handleRemoveAvatar = async () => {
+    setUploadingAvatar(true);
+    setAvatarMessage(null);
+    try {
+      const { error } = await supabase
+        .from("profiles")
+        .update({
+          avatar_url: null,
+          updated_at: new Date().toISOString(),
+        })
+        .eq("id", user.id);
+
+      if (error) throw error;
+
+      setAvatarUrl("");
+      if (refreshProfile) {
+        await refreshProfile();
+      }
+
+      setAvatarMessage({
+        type: "success",
+        text: "Profile picture removed. Initials will be displayed.",
+      });
+    } catch (err) {
+      console.error("Remove avatar error:", err);
+      setAvatarMessage({
+        type: "error",
+        text: "Failed to remove photo.",
+      });
+    } finally {
+      setUploadingAvatar(false);
+    }
+  };
 
   // Handle Profile Update
   const handleProfileSubmit = async (e) => {
@@ -179,6 +262,10 @@ export default function AccountPage() {
         .eq("id", user.id);
 
       if (error) throw error;
+
+      if (refreshProfile) {
+        await refreshProfile();
+      }
 
       setProfileAlert({
         type: "success",
@@ -286,7 +373,17 @@ export default function AccountPage() {
         <div className={styles.accountGrid}>
           {/* Left: User Card & Tab Navigation */}
           <div className={styles.userCard}>
-            <div className={styles.avatarLarge}>{initialLetter}</div>
+            <div className={styles.avatarLarge}>
+              {avatarUrl ? (
+                <img
+                  src={avatarUrl}
+                  alt={fullName || "User Avatar"}
+                  className={styles.avatarImg}
+                />
+              ) : (
+                initialLetter
+              )}
+            </div>
             <div className={styles.userName}>{fullName || "Salon Guest"}</div>
             <div className={styles.userEmail}>{user.email}</div>
 
@@ -297,6 +394,7 @@ export default function AccountPage() {
             )}
 
             <div className={styles.tabNav}>
+              
 
               <button
                 className={`${styles.tabBtn} ${
@@ -332,15 +430,12 @@ export default function AccountPage() {
 
           {/* Right: Content Panel */}
           <div className={styles.contentPanel}>
-            {/* TAB 0: MY APPOINTMENTS */}
-
-
             {/* TAB 1: PROFILE INFO */}
             {activeTab === "profile" && (
               <div>
                 <h2 className={styles.panelTitle}>Profile Information</h2>
                 <p className={styles.panelDesc}>
-                  Update your display name and basic account information.
+                  Update your display name, profile photo, and basic account information.
                 </p>
 
                 {profileAlert && (
@@ -354,6 +449,65 @@ export default function AccountPage() {
                     {profileAlert.message}
                   </div>
                 )}
+
+                {/* Profile Photo Uploader */}
+                <div className={styles.avatarUploadCard}>
+                  <div className={styles.avatarUploadPreview}>
+                    {avatarUrl ? (
+                      <img
+                        src={avatarUrl}
+                        alt="Profile Preview"
+                        className={styles.avatarImg}
+                      />
+                    ) : (
+                      initialLetter
+                    )}
+                  </div>
+
+                  <div className={styles.avatarUploadActions}>
+                    <div className={styles.avatarUploadTitle}>Profile Photo</div>
+                    <p className={styles.avatarUploadHelp}>
+                      Upload a photo (JPG, PNG, or WEBP, up to 5MB). Photo is automatically cropped, sanitized, and optimized for fast display.
+                    </p>
+
+                    <div className={styles.avatarBtnRow}>
+                      <label className={styles.uploadLabelBtn}>
+                        <HiOutlineCamera size={16} />
+                        <span>{uploadingAvatar ? "Optimizing & Saving..." : "Upload Photo"}</span>
+                        <input
+                          type="file"
+                          accept="image/jpeg,image/png,image/webp"
+                          disabled={uploadingAvatar}
+                          onChange={handleAvatarFileChange}
+                          style={{ display: "none" }}
+                        />
+                      </label>
+
+                      {avatarUrl && (
+                        <button
+                          type="button"
+                          className={styles.removePhotoBtn}
+                          onClick={handleRemoveAvatar}
+                          disabled={uploadingAvatar}
+                        >
+                          Remove Photo
+                        </button>
+                      )}
+                    </div>
+
+                    {avatarMessage && (
+                      <div
+                        className={
+                          avatarMessage.type === "success"
+                            ? styles.avatarSuccess
+                            : styles.avatarError
+                        }
+                      >
+                        {avatarMessage.text}
+                      </div>
+                    )}
+                  </div>
+                </div>
 
                 <form onSubmit={handleProfileSubmit} className={styles.form}>
                   <div className={styles.fieldGroup}>
