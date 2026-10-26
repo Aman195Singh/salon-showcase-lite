@@ -126,7 +126,7 @@ export default function Header() {
       <div className={`container ${styles.inner}`}>
         {/* Logo / Salon Name */}
         <Link href="/" className={styles.logo} aria-label="Home">
-          <span className={styles.logoIcon}>✦</span>
+          <HiOutlineSparkles className={styles.logoIcon} size={18} />
           <span className={styles.logoText}>{salonName}</span>
         </Link>
 
@@ -147,7 +147,7 @@ export default function Header() {
 
         {/* CTA + User Profile + Mobile toggle */}
         <div className={styles.actions}>
-          {/* Primary Consultation CTA */}
+          {/* Prominent Primary Booking CTA */}
           <Link
             href="/contact"
             className={`btn btn-primary btn-sm ${styles.ctaBtn}`}

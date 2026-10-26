@@ -356,6 +356,76 @@
 
 /* Mobile Breakpoint */
 @media (max-width: 767px) {
+  .inner {
+    height: 60px;
+  }
+
+  .logo {
+    gap: 6px;
+    min-width: 0;
+    max-width: calc(100% - 95px);
+  }
+
+  .logoIcon {
+    font-size: 1rem;
+    flex-shrink: 0;
+  }
+
+  .logoText {
+    font-size: 1.05rem;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+    line-height: 1.15;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .actions {
+    gap: 8px;
+    flex-shrink: 0;
+  }
+
+  .adminActionBtn {
+    display: none;
+  }
+
+  /* Compact circle avatar for mobile */
+  .profileAvatarBtn {
+    padding: 0;
+    border: none;
+    background: transparent;
+    border-radius: 50%;
+  }
+
+  .avatarCircle {
+    width: 34px;
+    height: 34px;
+    font-size: 13px;
+    border: 1.5px solid var(--color-border);
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
+  }
+
+  .avatarNameShort {
+    display: none;
+  }
+
+  .avatarChevron {
+    display: none;
+  }
+
+  .signInBtn {
+    padding: 6px 10px;
+    font-size: var(--text-xs);
+    gap: 4px;
+  }
+
+  .profileDropdown {
+    width: 250px;
+    max-width: calc(100vw - 32px);
+    right: -4px;
+  }
+
   .desktopNav {
     display: none;
   }
@@ -366,6 +436,8 @@
 
   .menuToggle {
     display: flex;
+    width: 36px;
+    height: 36px;
   }
 
   .overlay {
