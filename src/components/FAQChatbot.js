@@ -37,6 +37,8 @@ export default function FAQChatbot() {
     },
   ]);
   const [inputText, setInputText] = useState("");
+  const [isThinking, setIsThinking] = useState(false);
+  const [sessionId] = useState(() => "sess_" + Math.random().toString(36).substring(2, 9));
   const messagesEndRef = useRef(null);
 
   // Hide on dashboard and auth pages
@@ -70,7 +72,7 @@ export default function FAQChatbot() {
     if (isOpen) {
       messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
     }
-  }, [messages, isOpen]);
+  }, [messages, isThinking, isOpen]);
 
   if (isHidden) return null;
 
@@ -164,7 +166,9 @@ export default function FAQChatbot() {
     return null;
   };
 
-  const handleAskQuestion = (questionText) => {
+  const handleAskQuestion = async (questionText) => {
+    if (!questionText || isThinking) return;
+
     const timeStr = new Date().toLocaleTimeString([], {
       hour: "2-digit",
       minute: "2-digit",
@@ -177,33 +181,77 @@ export default function FAQChatbot() {
       time: timeStr,
     };
 
-    const answer = findAnswer(questionText);
+    // Add user message to conversation immediately
+    setMessages((prev) => [...prev, userMsg]);
 
-    let botMsg;
-    if (answer) {
-      botMsg = {
+    // 1. TIER 1: Check FAQ dataset first (Instant 0-latency reply)
+    const directAnswer = findAnswer(questionText);
+    if (directAnswer) {
+      const botMsg = {
         id: (Date.now() + 1).toString(),
         sender: "bot",
-        text: answer,
+        text: directAnswer,
         time: timeStr,
         showContactLink: false,
       };
-    } else {
-      botMsg = {
-        id: (Date.now() + 1).toString(),
-        sender: "bot",
-        text: "I don't have the exact answer for that question yet, but our salon team is happy to help! You can reach us directly via phone or send an enquiry on our Contact page.",
-        time: timeStr,
-        showContactLink: true,
-      };
+      setMessages((prev) => [...prev, botMsg]);
+      return;
     }
 
-    setMessages((prev) => [...prev, userMsg, botMsg]);
+    // 2. TIER 2: n8n AI Agent Workflow
+    setIsThinking(true);
+    try {
+      const res = await fetch("/api/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          message: questionText,
+          sessionId: sessionId,
+        }),
+      });
+
+      if (!res.ok) {
+        throw new Error("Chat service unavailable");
+      }
+
+      const data = await res.json();
+      const botReply =
+        data.reply ||
+        "I am happy to assist you with our luxury salon services. How else may I pamper you today?";
+
+      const botMsg = {
+        id: (Date.now() + 1).toString(),
+        sender: "bot",
+        text: botReply,
+        time: new Date().toLocaleTimeString([], {
+          hour: "2-digit",
+          minute: "2-digit",
+        }),
+        showContactLink: Boolean(data.showContactLink),
+      };
+
+      setMessages((prev) => [...prev, botMsg]);
+    } catch {
+      // 3. TIER 3: Fallback with Contact link
+      const fallbackMsg = {
+        id: (Date.now() + 1).toString(),
+        sender: "bot",
+        text: "I don't have the exact answer for that question right now, but our salon team is happy to help! You can reach us directly via phone or send an enquiry on our Contact page.",
+        time: new Date().toLocaleTimeString([], {
+          hour: "2-digit",
+          minute: "2-digit",
+        }),
+        showContactLink: true,
+      };
+      setMessages((prev) => [...prev, fallbackMsg]);
+    } finally {
+      setIsThinking(false);
+    }
   };
 
   const handleSend = (e) => {
     e.preventDefault();
-    if (!inputText.trim()) return;
+    if (!inputText.trim() || isThinking) return;
     const text = inputText.trim();
     setInputText("");
     handleAskQuestion(text);
@@ -238,7 +286,7 @@ export default function FAQChatbot() {
                   <HiOutlineSparkles size={14} color="var(--color-primary)" />
                 </div>
                 <div className={styles.botStatus}>
-                  <span className={styles.statusDot} /> Automated FAQ
+                  <span className={styles.statusDot} /> AI Concierge
                 </div>
               </div>
             </div>
@@ -287,6 +335,7 @@ export default function FAQChatbot() {
                           key={idx}
                           className={styles.chipBtn}
                           onClick={() => handleAskQuestion(q)}
+                          disabled={isThinking}
                         >
                           {q}
                         </button>
@@ -298,6 +347,20 @@ export default function FAQChatbot() {
                 </div>
               </div>
             ))}
+
+            {/* Thinking / AI Typing Indicator */}
+            {isThinking && (
+              <div className={styles.messageRow}>
+                <div
+                  className={`${styles.messageBubble} ${styles.botBubble} ${styles.typingBubble}`}
+                >
+                  <span className={styles.typingDot} />
+                  <span className={styles.typingDot} />
+                  <span className={styles.typingDot} />
+                </div>
+              </div>
+            )}
+
             <div ref={messagesEndRef} />
           </div>
 
@@ -306,14 +369,17 @@ export default function FAQChatbot() {
             <input
               type="text"
               className={styles.chatInput}
-              placeholder="Type your question..."
+              placeholder={
+                isThinking ? "Assistant is thinking..." : "Type your question..."
+              }
               value={inputText}
+              disabled={isThinking}
               onChange={(e) => setInputText(e.target.value)}
             />
             <button
               type="submit"
               className={styles.sendBtn}
-              disabled={!inputText.trim()}
+              disabled={!inputText.trim() || isThinking}
               aria-label="Send Message"
             >
               <HiOutlinePaperAirplane size={16} />
@@ -324,3 +390,4 @@ export default function FAQChatbot() {
     </>
   );
 }
+
