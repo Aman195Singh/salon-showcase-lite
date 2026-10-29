@@ -73,7 +73,7 @@ export default async function AboutPage() {
   return (
     <>
       {/* Hero */}
-      <section className={styles.hero}>
+      <section id="about-story-section" className={styles.hero}>
         <div className="container">
           <span className="section-label">About Us</span>
           <h1 className={styles.heroTitle}>{about.title || "Our Story"}</h1>

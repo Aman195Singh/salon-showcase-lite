@@ -75,7 +75,7 @@ export default async function ServicesPage() {
       </section>
 
       {/* Service Categories */}
-      <section className="section">
+      <section id="services-list-container" className="section">
         <div className="container">
           {categories.map((cat, ci) => (
             <div key={ci} className={styles.category}>

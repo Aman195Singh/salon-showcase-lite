@@ -59,7 +59,7 @@ export default function GalleryPage() {
       {/* Category Filter Pills */}
       <section className={styles.filterSection}>
         <div className="container">
-          <div className={styles.filterList} role="tablist" aria-label="Filter gallery by service category">
+          <div id="gallery-filter-tabs" className={styles.filterList} role="tablist" aria-label="Filter gallery by service category">
             {CATEGORIES.map((cat) => (
               <button
                 key={cat}
@@ -84,7 +84,7 @@ export default function GalleryPage() {
               <p>No photos in this category yet.</p>
             </div>
           ) : (
-            <div className={styles.grid}>
+            <div id="gallery-grid" className={styles.grid}>
               {filteredImages.map((img, i) => (
                 <button
                   key={img.id || i}

@@ -91,7 +91,10 @@ STRICT BUSINESS GUARDRAILS (CRITICAL):
    "I am exclusively trained to assist you with ${salonName}'s luxury treatments, appointments, and website navigation. How can we pamper you today?"
 3. NEVER INVENT OR HALLUCINATE: Never make up discounts, packages, or services that are not in the list above. Always use the exact service names and prices provided.
 4. BRAND PROMOTION: Always emphasize our clinical hygiene standards, certified master stylists, and 100% organic/premium international formulations.
-5. CONCISE & POLITE: Keep answers clear, courteous, and easy to read (2-4 sentences max unless detailed menu is requested).
+5. CONCISE, CLEAN FORMATTING:
+   - When listing services, provide 4-5 signature highlights on separate lines starting with a dash (- Service: Price) and advise them to explore the full menu on our Services page.
+   - Do NOT produce dense wall-of-text paragraphs.
+   - When user asks for guidance or how to visit/see a page (e.g. Gallery, Services, Contact), give clear step-by-step directions (e.g., Step 1: Look at the top navigation bar, Step 2: Click on the tab, or click the direct button below).
 
 WEBSITE NAVIGATION ASSISTANCE:
 - Services & Prices: Advise them to check the Services page (/services).
@@ -127,6 +130,8 @@ If a user asks for a customized bridal package, personalized hair consultation, 
             "I am happy to assist you with our salon services! You can also reach our team directly.";
 
           const lower = replyText.toLowerCase();
+          const qLower = message.toLowerCase();
+
           const showContactLink =
             lower.includes("contact page") ||
             lower.includes("/contact") ||
@@ -134,9 +139,29 @@ If a user asks for a customized bridal package, personalized hair consultation, 
             lower.includes("whatsapp") ||
             lower.includes("reach out");
 
+          // Detect if a tour / spotlight is relevant
+          let suggestedTour = null;
+          let suggestedPage = null;
+
+          if (qLower.includes("gallery") || lower.includes("/gallery") || qLower.includes("photo") || qLower.includes("work")) {
+            suggestedTour = "gallery";
+            suggestedPage = "/gallery";
+          } else if (qLower.includes("service") || lower.includes("/services") || qLower.includes("rate") || qLower.includes("menu")) {
+            suggestedTour = "services";
+            suggestedPage = "/services";
+          } else if (qLower.includes("contact") || qLower.includes("book") || qLower.includes("appointment") || qLower.includes("location") || qLower.includes("where")) {
+            suggestedTour = "contact";
+            suggestedPage = "/contact";
+          } else if (qLower.includes("about") || lower.includes("/about") || qLower.includes("story") || qLower.includes("hygiene")) {
+            suggestedTour = "about";
+            suggestedPage = "/about";
+          }
+
           return NextResponse.json({
             reply: replyText,
             showContactLink,
+            suggestedTour,
+            suggestedPage,
           });
         } else {
           console.error("[Groq API Error Status]:", groqResponse.status);

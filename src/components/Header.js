@@ -135,6 +135,7 @@ export default function Header() {
           {BASE_NAV_LINKS.map((link) => (
             <Link
               key={link.href}
+              id={`nav-${link.label.toLowerCase()}`}
               href={link.href}
               className={`${styles.navLink} ${
                 pathname === link.href ? styles.active : ""
@@ -151,6 +152,7 @@ export default function Header() {
           {/* Owner Quick Dashboard Access */}
           {isOwner && (
             <Link
+              id="nav-admin"
               href="/dashboard"
               className={styles.adminActionBtn}
               title="Open Salon Owner Admin Panel"

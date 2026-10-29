@@ -284,7 +284,7 @@ export default function ContactPage() {
             </div>
 
             {/* Right: Enquiry Form */}
-            <div className={styles.formCard}>
+            <div id="contact-form-card" className={styles.formCard}>
               <h2 className={styles.formTitle}>Send Us a Message</h2>
               <p className={styles.formDesc}>Fill in the form below and we&apos;ll get back to you as soon as possible.</p>
 

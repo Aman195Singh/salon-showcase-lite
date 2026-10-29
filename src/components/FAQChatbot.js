@@ -12,19 +12,57 @@ import {
 } from "react-icons/hi";
 import { DEFAULT_FAQS } from "@/lib/content";
 import { supabase } from "@/lib/supabase";
+import { useTour } from "@/context/TourContext";
 import styles from "./FAQChatbot.module.css";
 
 const QUICK_QUESTIONS = [
+  "🎯 Guide me: How to see Gallery?",
+  "🎯 Guide me: Explore Services & Pricing",
+  "🎯 Guide me: How to Book or Contact",
   "What are your opening hours?",
-  "Where is the salon located?",
-  "Do I need an appointment?",
   "What services do you offer?",
   "Do you offer bridal packages?",
-  "How can I contact you?",
 ];
+
+function FormattedMessage({ text }) {
+  if (!text) return null;
+
+  const lines = text.split("\n").filter((l) => l.trim().length > 0);
+
+  return (
+    <div className={styles.formattedContent}>
+      {lines.map((line, idx) => {
+        const trimmed = line.trim();
+        const isBullet = trimmed.startsWith("- ") || trimmed.startsWith("• ") || trimmed.startsWith("* ");
+        const cleanLine = isBullet ? trimmed.replace(/^[-•*]\s*/, "") : trimmed;
+
+        // Parse bold **text**
+        const parts = cleanLine.split(/(\*\*[^*]+\*\*)/g);
+        const parsed = parts.map((part, pIdx) => {
+          if (part.startsWith("**") && part.endsWith("**")) {
+            return <strong key={pIdx}>{part.slice(2, -2)}</strong>;
+          }
+          return part;
+        });
+
+        if (isBullet) {
+          return (
+            <div key={idx} className={styles.formattedListItem}>
+              <span className={styles.bulletDot} />
+              <span>{parsed}</span>
+            </div>
+          );
+        }
+
+        return <p key={idx}>{parsed}</p>;
+      })}
+    </div>
+  );
+}
 
 export default function FAQChatbot() {
   const pathname = usePathname();
+  const { startTour } = useTour();
   const [isOpen, setIsOpen] = useState(false);
   const [faqs, setFaqs] = useState(DEFAULT_FAQS);
   const [messages, setMessages] = useState([
@@ -187,18 +225,38 @@ export default function FAQChatbot() {
     // 1. TIER 1: Check FAQ dataset first (Instant 0-latency reply)
     const directAnswer = findAnswer(questionText);
     if (directAnswer) {
+      let suggestedTour = null;
+      let suggestedPage = null;
+      const qLower = questionText.toLowerCase();
+
+      if (qLower.includes("gallery") || qLower.includes("photo") || qLower.includes("work")) {
+        suggestedTour = "gallery";
+        suggestedPage = "/gallery";
+      } else if (qLower.includes("service") || qLower.includes("price") || qLower.includes("haircut") || qLower.includes("facial") || qLower.includes("rate")) {
+        suggestedTour = "services";
+        suggestedPage = "/services";
+      } else if (qLower.includes("contact") || qLower.includes("book") || qLower.includes("appoint") || qLower.includes("location") || qLower.includes("where") || qLower.includes("phone")) {
+        suggestedTour = "contact";
+        suggestedPage = "/contact";
+      } else if (qLower.includes("about") || qLower.includes("story") || qLower.includes("hygiene")) {
+        suggestedTour = "about";
+        suggestedPage = "/about";
+      }
+
       const botMsg = {
         id: (Date.now() + 1).toString(),
         sender: "bot",
         text: directAnswer,
         time: timeStr,
         showContactLink: false,
+        suggestedTour,
+        suggestedPage,
       };
       setMessages((prev) => [...prev, botMsg]);
       return;
     }
 
-    // 2. TIER 2: n8n AI Agent Workflow
+    // 2. TIER 2: n8n / Groq AI Agent Workflow
     setIsThinking(true);
     try {
       const res = await fetch("/api/chat", {
@@ -228,6 +286,8 @@ export default function FAQChatbot() {
           minute: "2-digit",
         }),
         showContactLink: Boolean(data.showContactLink),
+        suggestedTour: data.suggestedTour,
+        suggestedPage: data.suggestedPage,
       };
 
       setMessages((prev) => [...prev, botMsg]);
@@ -242,6 +302,8 @@ export default function FAQChatbot() {
           minute: "2-digit",
         }),
         showContactLink: true,
+        suggestedTour: "contact",
+        suggestedPage: "/contact",
       };
       setMessages((prev) => [...prev, fallbackMsg]);
     } finally {
@@ -286,7 +348,7 @@ export default function FAQChatbot() {
                   <HiOutlineSparkles size={14} color="var(--color-primary)" />
                 </div>
                 <div className={styles.botStatus}>
-                  <span className={styles.statusDot} /> AI Concierge
+                  <span className={styles.statusDot} /> AI Concierge & Guide
                 </div>
               </div>
             </div>
@@ -314,17 +376,52 @@ export default function FAQChatbot() {
                     m.sender === "user" ? styles.userBubble : styles.botBubble
                   }`}
                 >
-                  <p>{m.text}</p>
+                  {m.sender === "user" ? (
+                    <p>{m.text}</p>
+                  ) : (
+                    <FormattedMessage text={m.text} />
+                  )}
 
-                  {/* Show contact button if fallback */}
-                  {m.showContactLink && (
-                    <Link
-                      href="/contact"
-                      className={styles.contactCtaLink}
-                      onClick={() => setIsOpen(false)}
-                    >
-                      Go to Contact Page →
-                    </Link>
+                  {/* Interactive Action Buttons: Spotlight Guide & Direct Page Link */}
+                  {(m.suggestedTour || m.suggestedPage || m.showContactLink) && (
+                    <div className={styles.botActionsGrid}>
+                      {m.suggestedTour && (
+                        <button
+                          type="button"
+                          className={styles.tourTriggerBtn}
+                          onClick={() => {
+                            setIsOpen(false);
+                            startTour(m.suggestedTour);
+                          }}
+                          title="Start step-by-step interactive on-screen spotlight"
+                        >
+                          <HiOutlineSparkles size={13} />
+                          <span>🎯 Guide Me on Screen</span>
+                        </button>
+                      )}
+
+                      {m.suggestedPage && (
+                        <Link
+                          href={m.suggestedPage}
+                          className={styles.pageLinkBtn}
+                          onClick={() => setIsOpen(false)}
+                        >
+                          <span>
+                            Open {m.suggestedTour ? m.suggestedTour.charAt(0).toUpperCase() + m.suggestedTour.slice(1) : "Page"} →
+                          </span>
+                        </Link>
+                      )}
+
+                      {m.showContactLink && !m.suggestedPage && (
+                        <Link
+                          href="/contact"
+                          className={styles.contactCtaLink}
+                          onClick={() => setIsOpen(false)}
+                        >
+                          Go to Contact Page →
+                        </Link>
+                      )}
+                    </div>
                   )}
 
                   {/* Show quick chips on welcome */}
