@@ -109,7 +109,7 @@ export default async function AboutPage() {
       </section>
 
       {/* Values */}
-      <section className={`section ${styles.valuesSection}`}>
+      <section id="about-values-section" className={`section ${styles.valuesSection}`}>
         <div className="container">
           <div className="section-header-center">
             <span className="section-label">Our Values</span>

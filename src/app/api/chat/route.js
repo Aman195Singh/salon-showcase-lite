@@ -96,11 +96,14 @@ STRICT BUSINESS GUARDRAILS (CRITICAL):
    - Do NOT produce dense wall-of-text paragraphs.
    - When user asks for guidance or how to visit/see a page (e.g. Gallery, Services, Contact), give clear step-by-step directions (e.g., Step 1: Look at the top navigation bar, Step 2: Click on the tab, or click the direct button below).
 
-WEBSITE NAVIGATION ASSISTANCE:
-- Services & Prices: Advise them to check the Services page (/services).
-- Photo Gallery: Advise them to view real transformations on the Gallery page (/gallery).
-- Story & Standards: Advise them to read our philosophy on the About page (/about).
-- Bookings / Inquiries: Advise them to submit an enquiry on the Contact page (/contact) or contact us via WhatsApp.
+PUBLIC WEBSITE NAVIGATION ASSISTANCE (ONLY Public Customer Features):
+- Services & Prices: Advise them to explore the full menu on our Services page (/services).
+- Photo Gallery: Advise them to view real client transformations on the Gallery page (/gallery).
+- Appointment Booking: Advise them to submit an appointment request on our Contact page (/contact).
+- Direct Contact & Location: Advise them on our direct phone, WhatsApp chat, opening hours, and Google Maps directions on the Contact page (/contact).
+- Salon Story & Hygiene Standards: Advise them to read our story and clinical sterilization standards on the About page (/about).
+- Customer Account & Member Access: Advise them to Sign In (/login) to manage member privileges.
+- STRICT PRIVACY: NEVER disclose or discuss internal administrative tools, owner dashboard, revenue, staff management, or backend systems.
 
 SPECIAL FALLBACK RULE:
 If a user asks for a customized bridal package, personalized hair consultation, or specific appointment booking, answer gracefully and state:
@@ -139,22 +142,78 @@ If a user asks for a customized bridal package, personalized hair consultation, 
             lower.includes("whatsapp") ||
             lower.includes("reach out");
 
-          // Detect if a tour / spotlight is relevant
+          // Detect if a tour / spotlight is relevant for ANY public feature
           let suggestedTour = null;
           let suggestedPage = null;
 
-          if (qLower.includes("gallery") || lower.includes("/gallery") || qLower.includes("photo") || qLower.includes("work")) {
+          if (
+            qLower.includes("gallery") ||
+            lower.includes("/gallery") ||
+            qLower.includes("photo") ||
+            qLower.includes("work") ||
+            qLower.includes("look") ||
+            qLower.includes("transformation")
+          ) {
             suggestedTour = "gallery";
             suggestedPage = "/gallery";
-          } else if (qLower.includes("service") || lower.includes("/services") || qLower.includes("rate") || qLower.includes("menu")) {
+          } else if (
+            qLower.includes("book") ||
+            qLower.includes("appoint") ||
+            qLower.includes("reserve") ||
+            qLower.includes("slot") ||
+            lower.includes("book an appointment")
+          ) {
+            suggestedTour = "booking";
+            suggestedPage = "/contact";
+          } else if (
+            qLower.includes("service") ||
+            lower.includes("/services") ||
+            qLower.includes("rate") ||
+            qLower.includes("price") ||
+            qLower.includes("cost") ||
+            qLower.includes("haircut") ||
+            qLower.includes("facial") ||
+            qLower.includes("spa") ||
+            qLower.includes("menu")
+          ) {
             suggestedTour = "services";
             suggestedPage = "/services";
-          } else if (qLower.includes("contact") || qLower.includes("book") || qLower.includes("appointment") || qLower.includes("location") || qLower.includes("where")) {
+          } else if (
+            qLower.includes("contact") ||
+            lower.includes("/contact") ||
+            qLower.includes("phone") ||
+            qLower.includes("whatsapp") ||
+            qLower.includes("call") ||
+            qLower.includes("location") ||
+            qLower.includes("address") ||
+            qLower.includes("map") ||
+            qLower.includes("direction") ||
+            qLower.includes("hour") ||
+            qLower.includes("timing") ||
+            qLower.includes("where")
+          ) {
             suggestedTour = "contact";
             suggestedPage = "/contact";
-          } else if (qLower.includes("about") || lower.includes("/about") || qLower.includes("story") || qLower.includes("hygiene")) {
+          } else if (
+            qLower.includes("about") ||
+            lower.includes("/about") ||
+            qLower.includes("story") ||
+            qLower.includes("hygiene") ||
+            qLower.includes("safety") ||
+            qLower.includes("stylist") ||
+            qLower.includes("product")
+          ) {
             suggestedTour = "about";
             suggestedPage = "/about";
+          } else if (
+            qLower.includes("account") ||
+            qLower.includes("login") ||
+            qLower.includes("signin") ||
+            qLower.includes("sign in") ||
+            qLower.includes("member")
+          ) {
+            suggestedTour = "account";
+            suggestedPage = "/login";
           }
 
           return NextResponse.json({

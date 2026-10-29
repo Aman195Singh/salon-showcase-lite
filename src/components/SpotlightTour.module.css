@@ -8,15 +8,17 @@
 
 /* Pulsing Glowing Cutout Box over the highlighted target element */
 .spotlightRing {
-  position: absolute;
-  border-radius: 8px;
-  box-shadow: 0 0 0 9999px rgba(15, 12, 9, 0.75), 0 0 20px 4px #d4af37;
+  position: fixed !important;
+  border-radius: 10px;
+  box-shadow: 0 0 0 9999px rgba(15, 12, 9, 0.78), 0 0 22px 5px #d4af37;
   border: 2px solid #d4af37;
   pointer-events: auto;
   cursor: pointer;
-  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  /* Zero transition on layout properties (top, left, width, height) so scrolling NEVER drifts */
+  transition: opacity 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
   animation: ringPulse 2s infinite ease-in-out;
   z-index: 9995;
+  will-change: top, left, width, height;
 }
 
 @keyframes ringPulse {
@@ -157,3 +159,27 @@
   transform: translateY(-1px);
   box-shadow: 0 6px 16px rgba(184, 134, 11, 0.45);
 }
+
+.recenterBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  width: 100%;
+  margin-bottom: 12px;
+  background: rgba(184, 134, 11, 0.1);
+  color: #8b6f4e;
+  border: 1px dashed rgba(184, 134, 11, 0.4);
+  border-radius: 8px;
+  padding: 6px 10px;
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.recenterBtn:hover {
+  background: rgba(184, 134, 11, 0.18);
+  color: #1a1714;
+}
+

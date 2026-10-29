@@ -16,12 +16,14 @@ import { useTour } from "@/context/TourContext";
 import styles from "./FAQChatbot.module.css";
 
 const QUICK_QUESTIONS = [
-  "🎯 Guide me: How to see Gallery?",
-  "🎯 Guide me: Explore Services & Pricing",
-  "🎯 Guide me: How to Book or Contact",
+  "🎯 Guide: Explore Services & Pricing",
+  "🎯 Guide: View Photo Gallery",
+  "🎯 Guide: Book an Appointment",
+  "🎯 Guide: Contact, WhatsApp & Location",
+  "🎯 Guide: Salon Story & Hygiene",
+  "🎯 Guide: Customer Account & Sign In",
   "What are your opening hours?",
-  "What services do you offer?",
-  "Do you offer bridal packages?",
+  "Do you offer bridal & groom packages?",
 ];
 
 function FormattedMessage({ text }) {
@@ -128,6 +130,16 @@ export default function FAQChatbot() {
 
     // 2. Keyword matching rules
     if (
+      qLower.includes("gallery") ||
+      qLower.includes("photo") ||
+      qLower.includes("look") ||
+      qLower.includes("transform") ||
+      qLower.includes("image")
+    ) {
+      return "Explore our high-resolution photo gallery showcasing real hair transformations, skin glow rituals, bridal looks, and salon ambience. Tap any photo to view full-screen details!";
+    }
+
+    if (
       qLower.includes("time") ||
       qLower.includes("hour") ||
       qLower.includes("open") ||
@@ -142,18 +154,20 @@ export default function FAQChatbot() {
       qLower.includes("location") ||
       qLower.includes("address") ||
       qLower.includes("map") ||
-      qLower.includes("place")
+      qLower.includes("direction")
     ) {
-      return "Please visit our Contact page to see our exact salon address and interactive Google Maps directions.";
+      return "Please visit our Contact page to see our salon address and interactive Google Maps turn-by-turn directions.";
     }
 
     if (
       qLower.includes("appoint") ||
       qLower.includes("book") ||
       qLower.includes("walk-in") ||
-      qLower.includes("walkin")
+      qLower.includes("walkin") ||
+      qLower.includes("slot") ||
+      qLower.includes("reserve")
     ) {
-      return "Walk-ins are always welcome! However, we recommend booking in advance or calling ahead for weekends and festive seasons.";
+      return "You can easily submit an appointment booking enquiry on our Contact page. Walk-ins are always welcome, though advance booking is recommended for weekends!";
     }
 
     if (
@@ -161,16 +175,17 @@ export default function FAQChatbot() {
       qLower.includes("hair cut") ||
       qLower.includes("styling")
     ) {
-      return "We offer Men's precision haircuts starting at ₹450 and Women's cuts with blow-dry starting at ₹850. Check our Services page for details.";
+      return "We offer Men's precision haircuts starting at ₹450 and Women's cuts with blow-dry starting at ₹850. Check our Services page for full details.";
     }
 
     if (
       qLower.includes("price") ||
       qLower.includes("cost") ||
       qLower.includes("rate") ||
-      qLower.includes("charge")
+      qLower.includes("charge") ||
+      qLower.includes("menu")
     ) {
-      return "Our services start from ₹200 for grooming, ₹450 for haircuts, ₹700 for cleanups, and ₹1,500 for premium facials. Please check the Services tab for full pricing.";
+      return "Our services start from ₹200 for grooming, ₹450 for haircuts, ₹700 for cleanups, and ₹1,500 for premium facials. Please check the Services tab for our complete price list.";
     }
 
     if (
@@ -178,7 +193,7 @@ export default function FAQChatbot() {
       qLower.includes("wedding") ||
       qLower.includes("groom makeup")
     ) {
-      return "Yes! We specialize in complete Bridal & Groom makeover packages. Contact us directly or submit an enquiry on our Contact page to get a personalized bridal consultation.";
+      return "Yes! We specialize in bespoke Bridal & Groom makeover packages. Contact us directly or submit an enquiry on our Contact page to arrange a personalized consultation.";
     }
 
     if (
@@ -188,7 +203,29 @@ export default function FAQChatbot() {
       qLower.includes("call") ||
       qLower.includes("number")
     ) {
-      return "You can reach us by phone or WhatsApp at +91 98765 43210 or email us at contact@auraluxesalon.com.";
+      return "You can reach our salon desk by phone or WhatsApp at +91 98765 43210 or email us at contact@auraluxesalon.com.";
+    }
+
+    if (
+      qLower.includes("about") ||
+      qLower.includes("story") ||
+      qLower.includes("hygiene") ||
+      qLower.includes("safety") ||
+      qLower.includes("steril") ||
+      qLower.includes("stylist") ||
+      qLower.includes("product")
+    ) {
+      return "At Aura Luxury Salon, we pride ourselves on clinical hygiene protocols, 100% sterilized instruments, and master certified stylists using premium organic formulations.";
+    }
+
+    if (
+      qLower.includes("account") ||
+      qLower.includes("login") ||
+      qLower.includes("signin") ||
+      qLower.includes("sign in") ||
+      qLower.includes("member")
+    ) {
+      return "You can sign in to your Member Account to easily view your salon bookings, update personal preferences, and enjoy exclusive member privileges.";
     }
 
     if (
@@ -229,18 +266,24 @@ export default function FAQChatbot() {
       let suggestedPage = null;
       const qLower = questionText.toLowerCase();
 
-      if (qLower.includes("gallery") || qLower.includes("photo") || qLower.includes("work")) {
+      if (qLower.includes("gallery") || qLower.includes("photo") || qLower.includes("look") || qLower.includes("image")) {
         suggestedTour = "gallery";
         suggestedPage = "/gallery";
-      } else if (qLower.includes("service") || qLower.includes("price") || qLower.includes("haircut") || qLower.includes("facial") || qLower.includes("rate")) {
+      } else if (qLower.includes("book") || qLower.includes("appoint") || qLower.includes("reserve") || qLower.includes("slot")) {
+        suggestedTour = "booking";
+        suggestedPage = "/contact";
+      } else if (qLower.includes("service") || qLower.includes("price") || qLower.includes("haircut") || qLower.includes("facial") || qLower.includes("rate") || qLower.includes("cost") || qLower.includes("bridal") || qLower.includes("grooming") || qLower.includes("menu")) {
         suggestedTour = "services";
         suggestedPage = "/services";
-      } else if (qLower.includes("contact") || qLower.includes("book") || qLower.includes("appoint") || qLower.includes("location") || qLower.includes("where") || qLower.includes("phone")) {
+      } else if (qLower.includes("contact") || qLower.includes("phone") || qLower.includes("whatsapp") || qLower.includes("call") || qLower.includes("location") || qLower.includes("address") || qLower.includes("map") || qLower.includes("hour") || qLower.includes("time") || qLower.includes("open") || qLower.includes("where")) {
         suggestedTour = "contact";
         suggestedPage = "/contact";
-      } else if (qLower.includes("about") || qLower.includes("story") || qLower.includes("hygiene")) {
+      } else if (qLower.includes("about") || qLower.includes("story") || qLower.includes("hygiene") || qLower.includes("safety") || qLower.includes("stylist") || qLower.includes("product")) {
         suggestedTour = "about";
         suggestedPage = "/about";
+      } else if (qLower.includes("account") || qLower.includes("login") || qLower.includes("signin") || qLower.includes("sign in") || qLower.includes("member")) {
+        suggestedTour = "account";
+        suggestedPage = "/login";
       }
 
       const botMsg = {

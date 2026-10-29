@@ -144,7 +144,7 @@ export default function ContactPage() {
             <div className={styles.info}>
               <h2 className={styles.infoTitle}>Reach Us</h2>
 
-              <div className={styles.infoList}>
+              <div id="contact-direct-actions" className={styles.infoList}>
                 {contactInfo.phone && (
                   getPhoneLink(contactInfo.phone) ? (
                     <a href={getPhoneLink(contactInfo.phone)} className={styles.infoItem}>
@@ -228,7 +228,7 @@ export default function ContactPage() {
 
               {/* Opening Hours */}
               {contactInfo.hours && contactInfo.hours.length > 0 && (
-                <div className={styles.hoursCard}>
+                <div id="contact-hours-card" className={styles.hoursCard}>
                   <div className={styles.hoursHeader}>
                     <HiOutlineClock size={18} />
                     <h3 className={styles.hoursTitle}>Opening Hours</h3>

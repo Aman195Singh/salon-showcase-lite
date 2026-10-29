@@ -166,6 +166,7 @@ export default function Header() {
           {user ? (
             <div className={styles.profileTriggerWrapper} ref={dropdownRef}>
               <button
+                id="nav-profile"
                 className={styles.profileAvatarBtn}
                 onClick={() => setDropdownOpen(!dropdownOpen)}
                 aria-expanded={dropdownOpen}
@@ -259,7 +260,7 @@ export default function Header() {
               )}
             </div>
           ) : (
-            <Link href="/login" className={styles.signInBtn}>
+            <Link id="nav-signin" href="/login" className={styles.signInBtn}>
               <HiOutlineUser size={16} />
               <span>Sign In</span>
             </Link>
