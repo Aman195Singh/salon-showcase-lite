@@ -76,14 +76,16 @@ export default function DashboardShell({ children }) {
 
   return (
     <div className={styles.dashboardLayout}>
-      {/* Mobile sidebar toggle */}
-      <button
-        className={styles.mobileToggle}
-        onClick={() => setSidebarOpen(!sidebarOpen)}
-        aria-label={sidebarOpen ? "Close sidebar" : "Open sidebar"}
-      >
-        {sidebarOpen ? <HiOutlineX size={22} /> : <HiOutlineMenu size={22} />}
-      </button>
+      {/* Mobile sidebar toggle button - only shown when sidebar is closed */}
+      {!sidebarOpen && (
+        <button
+          className={styles.mobileToggle}
+          onClick={() => setSidebarOpen(true)}
+          aria-label="Open sidebar"
+        >
+          <HiOutlineMenu size={22} />
+        </button>
+      )}
 
       {/* Sidebar overlay for mobile */}
       {sidebarOpen && (

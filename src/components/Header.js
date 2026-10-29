@@ -145,16 +145,8 @@ export default function Header() {
           ))}
         </nav>
 
-        {/* CTA + User Profile + Mobile toggle */}
+        {/* Admin Action + User Profile + Mobile toggle */}
         <div className={styles.actions}>
-          {/* Prominent Primary Booking CTA */}
-          <Link
-            href="/contact"
-            className={`btn btn-primary btn-sm ${styles.ctaBtn}`}
-          >
-            <HiOutlineCalendar size={16} />
-            <span>Book Consultation</span>
-          </Link>
 
           {/* Owner Quick Dashboard Access */}
           {isOwner && (
