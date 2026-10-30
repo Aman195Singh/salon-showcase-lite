@@ -16,47 +16,244 @@ import { useTour } from "@/context/TourContext";
 import styles from "./FAQChatbot.module.css";
 
 const QUICK_QUESTIONS = [
-  "🎯 Guide: Explore Services & Pricing",
-  "🎯 Guide: View Photo Gallery",
-  "🎯 Guide: Book an Appointment",
-  "🎯 Guide: Contact, WhatsApp & Location",
-  "🎯 Guide: Salon Story & Hygiene",
-  "🎯 Guide: Customer Account & Sign In",
+  "What are your popular services & prices?",
   "What are your opening hours?",
-  "Do you offer bridal & groom packages?",
+  "How can I book an appointment?",
+  "Where is the salon located?",
+  "Do you offer bridal & groom makeover packages?",
+  "Tell me about salon hygiene standards",
+  "🎯 Take an interactive screen tour",
 ];
 
+/**
+ * Checks if the user explicitly asked for website guidance / tour
+ */
+function isExplicitGuidance(text) {
+  if (!text) return false;
+  const t = text.toLowerCase();
+  const triggers = [
+    "guide",
+    "guide me",
+    "tour",
+    "walkthrough",
+    "rasta",
+    "rasta batao",
+    "rasta dikhao",
+    "screen par guide",
+    "screen par dikhao",
+    "highlight karo",
+    "kaise navigate",
+    "navigate",
+    "take a tour",
+    "take an interactive screen tour",
+    "step by step guide",
+    "dikhao kahan hai",
+    "spotlight",
+    "kahan se dekhun",
+  ];
+  return triggers.some((k) => t.includes(k));
+}
+
+function parseInline(text) {
+  if (!text) return null;
+
+  // Tokenize bold, italic, inline code, links
+  const tokenRegex = /(\*\*[^*]+\*\*|__[^_]+__|`[^`]+`|\[[^\]]+\]\([^)]+\)|\*[^*]+\*|_[^_]+_)/g;
+  const parts = text.split(tokenRegex);
+
+  return parts.filter(Boolean).map((part, index) => {
+    if (
+      (part.startsWith("**") && part.endsWith("**")) ||
+      (part.startsWith("__") && part.endsWith("__"))
+    ) {
+      return <strong key={index}>{part.slice(2, -2)}</strong>;
+    }
+    if (part.startsWith("`") && part.endsWith("`")) {
+      return (
+        <code key={index} className={styles.inlineCode}>
+          {part.slice(1, -1)}
+        </code>
+      );
+    }
+    const linkMatch = part.match(/^\[([^\]]+)\]\(([^)]+)\)$/);
+    if (linkMatch) {
+      return (
+        <a
+          key={index}
+          href={linkMatch[2]}
+          className={styles.inlineLink}
+          target={linkMatch[2].startsWith("http") ? "_blank" : undefined}
+          rel={linkMatch[2].startsWith("http") ? "noopener noreferrer" : undefined}
+        >
+          {linkMatch[1]}
+        </a>
+      );
+    }
+    if (
+      (part.startsWith("*") && part.endsWith("*")) ||
+      (part.startsWith("_") && part.endsWith("_"))
+    ) {
+      return <em key={index}>{part.slice(1, -1)}</em>;
+    }
+    return <span key={index}>{part}</span>;
+  });
+}
+
+/**
+ * Rich Formatted Message & Markdown Compiler
+ * Compiles markdown tables, lists, headings, and inline tags into clean,
+ * readable HTML/React elements without showing raw uncompiled markdown code.
+ */
 function FormattedMessage({ text }) {
   if (!text) return null;
 
-  const lines = text.split("\n").filter((l) => l.trim().length > 0);
+  // 1. Strip raw code fences (```markdown ... ``` or ``` ... ```)
+  const cleanText = text.replace(/```[a-zA-Z]*\n?([\s\S]*?)```/g, "$1").trim();
+
+  const rawLines = cleanText.split("\n");
+  const blocks = [];
+  let i = 0;
+
+  const isTableSeparator = (str) =>
+    /^\|?[\s:-]+(?:\|[\s:-]+)+\|?$/.test(str.trim());
+
+  while (i < rawLines.length) {
+    const line = rawLines[i];
+    const trimmed = line.trim();
+
+    if (!trimmed) {
+      i++;
+      continue;
+    }
+
+    // Markdown Table: line contains '|' and the next line is a separator row
+    if (
+      trimmed.includes("|") &&
+      i + 1 < rawLines.length &&
+      isTableSeparator(rawLines[i + 1])
+    ) {
+      const headerLine = trimmed;
+      i += 2; // skip header and separator
+      const rows = [];
+      while (i < rawLines.length && rawLines[i].trim().includes("|")) {
+        const rowLine = rawLines[i].trim();
+        let cells = rowLine.split("|").map((c) => c.trim());
+        if (rowLine.startsWith("|")) cells.shift();
+        if (rowLine.endsWith("|")) cells.pop();
+        if (cells.length > 0) rows.push(cells);
+        i++;
+      }
+      let headerCells = headerLine.split("|").map((c) => c.trim());
+      if (headerLine.startsWith("|")) headerCells.shift();
+      if (headerLine.endsWith("|")) headerCells.pop();
+
+      blocks.push({ type: "table", headers: headerCells, rows });
+      continue;
+    }
+
+    // Markdown Headings (#, ##, ###)
+    const headingMatch = trimmed.match(/^(#{1,6})\s+(.*)$/);
+    if (headingMatch) {
+      blocks.push({
+        type: "heading",
+        level: headingMatch[1].length,
+        text: headingMatch[2],
+      });
+      i++;
+      continue;
+    }
+
+    // Unordered List (- , * , • )
+    if (/^[-*•]\s+/.test(trimmed)) {
+      const items = [];
+      while (i < rawLines.length && /^[-*•]\s+/.test(rawLines[i].trim())) {
+        items.push(rawLines[i].trim().replace(/^[-*•]\s+/, ""));
+        i++;
+      }
+      blocks.push({ type: "bullet_list", items });
+      continue;
+    }
+
+    // Ordered List (1. , 2. )
+    if (/^\d+\.\s+/.test(trimmed)) {
+      const items = [];
+      while (i < rawLines.length && /^\d+\.\s+/.test(rawLines[i].trim())) {
+        items.push(rawLines[i].trim().replace(/^\d+\.\s+/, ""));
+        i++;
+      }
+      blocks.push({ type: "ordered_list", items });
+      continue;
+    }
+
+    // Regular paragraph
+    blocks.push({ type: "paragraph", text: trimmed });
+    i++;
+  }
 
   return (
     <div className={styles.formattedContent}>
-      {lines.map((line, idx) => {
-        const trimmed = line.trim();
-        const isBullet = trimmed.startsWith("- ") || trimmed.startsWith("• ") || trimmed.startsWith("* ");
-        const cleanLine = isBullet ? trimmed.replace(/^[-•*]\s*/, "") : trimmed;
-
-        // Parse bold **text**
-        const parts = cleanLine.split(/(\*\*[^*]+\*\*)/g);
-        const parsed = parts.map((part, pIdx) => {
-          if (part.startsWith("**") && part.endsWith("**")) {
-            return <strong key={pIdx}>{part.slice(2, -2)}</strong>;
-          }
-          return part;
-        });
-
-        if (isBullet) {
+      {blocks.map((block, idx) => {
+        if (block.type === "table") {
           return (
-            <div key={idx} className={styles.formattedListItem}>
-              <span className={styles.bulletDot} />
-              <span>{parsed}</span>
+            <div key={idx} className={styles.tableWrapper}>
+              <table className={styles.markdownTable}>
+                {block.headers.length > 0 && (
+                  <thead>
+                    <tr>
+                      {block.headers.map((h, hIdx) => (
+                        <th key={hIdx}>{parseInline(h)}</th>
+                      ))}
+                    </tr>
+                  </thead>
+                )}
+                <tbody>
+                  {block.rows.map((row, rIdx) => (
+                    <tr key={rIdx}>
+                      {row.map((cell, cIdx) => (
+                        <td key={cIdx}>{parseInline(cell)}</td>
+                      ))}
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
             </div>
           );
         }
 
-        return <p key={idx}>{parsed}</p>;
+        if (block.type === "heading") {
+          return (
+            <div key={idx} className={styles.mdHeading}>
+              {parseInline(block.text)}
+            </div>
+          );
+        }
+
+        if (block.type === "bullet_list") {
+          return (
+            <div key={idx} className={styles.formattedList}>
+              {block.items.map((item, bIdx) => (
+                <div key={bIdx} className={styles.formattedListItem}>
+                  <span className={styles.bulletDot} />
+                  <span>{parseInline(item)}</span>
+                </div>
+              ))}
+            </div>
+          );
+        }
+
+        if (block.type === "ordered_list") {
+          return (
+            <ol key={idx} className={styles.orderedList}>
+              {block.items.map((item, oIdx) => (
+                <li key={oIdx} className={styles.orderedListItem}>
+                  {parseInline(item)}
+                </li>
+              ))}
+            </ol>
+          );
+        }
+
+        return <p key={idx}>{parseInline(block.text)}</p>;
       })}
     </div>
   );
@@ -71,7 +268,7 @@ export default function FAQChatbot() {
     {
       id: "welcome",
       sender: "bot",
-      text: "Hello! Welcome to our salon. I am your automated assistant. Click any question below or type your query!",
+      text: "Hello! Welcome to Aura Luxury Salon. How may I assist you with our services, treatments, or pricing today?",
       time: "Just now",
       showChips: true,
     },
@@ -120,7 +317,12 @@ export default function FAQChatbot() {
   const findAnswer = (query) => {
     const qLower = query.toLowerCase().trim();
 
-    // 1. Direct match with configured FAQs
+    // 1. Explicit Guidance / Screen Tour request
+    if (isExplicitGuidance(qLower)) {
+      return "I would be delighted to guide you! Click the **🎯 Guide Me on Screen** button below to start an interactive step-by-step walkthrough.";
+    }
+
+    // 2. Direct match with configured FAQs from database
     const exactMatch = faqs.find(
       (f) =>
         f.question.toLowerCase().includes(qLower) ||
@@ -128,7 +330,7 @@ export default function FAQChatbot() {
     );
     if (exactMatch) return exactMatch.answer;
 
-    // 2. Keyword matching rules
+    // 3. Keyword matching rules for direct answers
     if (
       qLower.includes("gallery") ||
       qLower.includes("photo") ||
@@ -136,7 +338,7 @@ export default function FAQChatbot() {
       qLower.includes("transform") ||
       qLower.includes("image")
     ) {
-      return "Explore our high-resolution photo gallery showcasing real hair transformations, skin glow rituals, bridal looks, and salon ambience. Tap any photo to view full-screen details!";
+      return "Our photo gallery showcases real client hair styling transformations, clinical skin glow rituals, bespoke bridal looks, and salon ambience. We specialize in both women's and men's luxury grooming.";
     }
 
     if (
@@ -156,7 +358,7 @@ export default function FAQChatbot() {
       qLower.includes("map") ||
       qLower.includes("direction")
     ) {
-      return "Please visit our Contact page to see our salon address and interactive Google Maps turn-by-turn directions.";
+      return "We are located at Luxury Boulevard, Near City Centre. Our desk is reachable at +91 98765 43210 for turn-by-turn directions.";
     }
 
     if (
@@ -167,7 +369,7 @@ export default function FAQChatbot() {
       qLower.includes("slot") ||
       qLower.includes("reserve")
     ) {
-      return "You can easily submit an appointment booking enquiry on our Contact page. Walk-ins are always welcome, though advance booking is recommended for weekends!";
+      return "You can easily book an appointment by calling our desk at +91 98765 43210, messaging on WhatsApp, or submitting an enquiry on our Contact page.";
     }
 
     if (
@@ -175,7 +377,7 @@ export default function FAQChatbot() {
       qLower.includes("hair cut") ||
       qLower.includes("styling")
     ) {
-      return "We offer Men's precision haircuts starting at ₹450 and Women's cuts with blow-dry starting at ₹850. Check our Services page for full details.";
+      return "We offer Men's precision haircuts starting at ₹450 and Women's cuts with blow-dry styling starting at ₹850.";
     }
 
     if (
@@ -185,7 +387,7 @@ export default function FAQChatbot() {
       qLower.includes("charge") ||
       qLower.includes("menu")
     ) {
-      return "Our services start from ₹200 for grooming, ₹450 for haircuts, ₹700 for cleanups, and ₹1,500 for premium facials. Please check the Services tab for our complete price list.";
+      return "Our services start from ₹200 for grooming, ₹450 for haircuts, ₹700 for cleanups, and ₹1,500 for premium facials. Bespoke bridal packages are also available.";
     }
 
     if (
@@ -193,7 +395,7 @@ export default function FAQChatbot() {
       qLower.includes("wedding") ||
       qLower.includes("groom makeup")
     ) {
-      return "Yes! We specialize in bespoke Bridal & Groom makeover packages. Contact us directly or submit an enquiry on our Contact page to arrange a personalized consultation.";
+      return "Yes! We specialize in bespoke Bridal & Groom makeover packages. Please reach out to our salon desk at +91 98765 43210 to arrange a personal consultation.";
     }
 
     if (
@@ -264,26 +466,77 @@ export default function FAQChatbot() {
     if (directAnswer) {
       let suggestedTour = null;
       let suggestedPage = null;
-      const qLower = questionText.toLowerCase();
 
-      if (qLower.includes("gallery") || qLower.includes("photo") || qLower.includes("look") || qLower.includes("image")) {
-        suggestedTour = "gallery";
-        suggestedPage = "/gallery";
-      } else if (qLower.includes("book") || qLower.includes("appoint") || qLower.includes("reserve") || qLower.includes("slot")) {
-        suggestedTour = "booking";
-        suggestedPage = "/contact";
-      } else if (qLower.includes("service") || qLower.includes("price") || qLower.includes("haircut") || qLower.includes("facial") || qLower.includes("rate") || qLower.includes("cost") || qLower.includes("bridal") || qLower.includes("grooming") || qLower.includes("menu")) {
-        suggestedTour = "services";
-        suggestedPage = "/services";
-      } else if (qLower.includes("contact") || qLower.includes("phone") || qLower.includes("whatsapp") || qLower.includes("call") || qLower.includes("location") || qLower.includes("address") || qLower.includes("map") || qLower.includes("hour") || qLower.includes("time") || qLower.includes("open") || qLower.includes("where")) {
-        suggestedTour = "contact";
-        suggestedPage = "/contact";
-      } else if (qLower.includes("about") || qLower.includes("story") || qLower.includes("hygiene") || qLower.includes("safety") || qLower.includes("stylist") || qLower.includes("product")) {
-        suggestedTour = "about";
-        suggestedPage = "/about";
-      } else if (qLower.includes("account") || qLower.includes("login") || qLower.includes("signin") || qLower.includes("sign in") || qLower.includes("member")) {
-        suggestedTour = "account";
-        suggestedPage = "/login";
+      // Only attach interactive tour / spotlight if user explicitly requested guidance!
+      if (isExplicitGuidance(questionText)) {
+        const qLower = questionText.toLowerCase();
+        if (
+          qLower.includes("gallery") ||
+          qLower.includes("photo") ||
+          qLower.includes("look") ||
+          qLower.includes("image")
+        ) {
+          suggestedTour = "gallery";
+          suggestedPage = "/gallery";
+        } else if (
+          qLower.includes("book") ||
+          qLower.includes("appoint") ||
+          qLower.includes("reserve") ||
+          qLower.includes("slot")
+        ) {
+          suggestedTour = "booking";
+          suggestedPage = "/contact";
+        } else if (
+          qLower.includes("service") ||
+          qLower.includes("price") ||
+          qLower.includes("haircut") ||
+          qLower.includes("facial") ||
+          qLower.includes("rate") ||
+          qLower.includes("cost") ||
+          qLower.includes("bridal") ||
+          qLower.includes("grooming") ||
+          qLower.includes("menu")
+        ) {
+          suggestedTour = "services";
+          suggestedPage = "/services";
+        } else if (
+          qLower.includes("contact") ||
+          qLower.includes("phone") ||
+          qLower.includes("whatsapp") ||
+          qLower.includes("call") ||
+          qLower.includes("location") ||
+          qLower.includes("address") ||
+          qLower.includes("map") ||
+          qLower.includes("hour") ||
+          qLower.includes("time") ||
+          qLower.includes("open") ||
+          qLower.includes("where")
+        ) {
+          suggestedTour = "contact";
+          suggestedPage = "/contact";
+        } else if (
+          qLower.includes("about") ||
+          qLower.includes("story") ||
+          qLower.includes("hygiene") ||
+          qLower.includes("safety") ||
+          qLower.includes("stylist") ||
+          qLower.includes("product")
+        ) {
+          suggestedTour = "about";
+          suggestedPage = "/about";
+        } else if (
+          qLower.includes("account") ||
+          qLower.includes("login") ||
+          qLower.includes("signin") ||
+          qLower.includes("sign in") ||
+          qLower.includes("member")
+        ) {
+          suggestedTour = "account";
+          suggestedPage = "/login";
+        } else {
+          suggestedTour = "services";
+          suggestedPage = "/services";
+        }
       }
 
       const botMsg = {
@@ -336,17 +589,18 @@ export default function FAQChatbot() {
       setMessages((prev) => [...prev, botMsg]);
     } catch {
       // 3. TIER 3: Fallback with Contact link
+      const isGuidanceReq = isExplicitGuidance(questionText);
       const fallbackMsg = {
         id: (Date.now() + 1).toString(),
         sender: "bot",
-        text: "I don't have the exact answer for that question right now, but our salon team is happy to help! You can reach us directly via phone or send an enquiry on our Contact page.",
+        text: "I don't have the exact answer for that question right now, but our salon team is happy to help! You can reach us directly at +91 98765 43210 or send an enquiry on our Contact page.",
         time: new Date().toLocaleTimeString([], {
           hour: "2-digit",
           minute: "2-digit",
         }),
         showContactLink: true,
-        suggestedTour: "contact",
-        suggestedPage: "/contact",
+        suggestedTour: isGuidanceReq ? "contact" : null,
+        suggestedPage: isGuidanceReq ? "/contact" : null,
       };
       setMessages((prev) => [...prev, fallbackMsg]);
     } finally {

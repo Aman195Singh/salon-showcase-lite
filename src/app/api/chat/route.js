@@ -3,9 +3,38 @@ import { supabaseServer } from "@/lib/supabase-server";
 import { DEFAULT_SERVICES, DEFAULT_CONTENT } from "@/lib/content";
 
 /**
+ * Checks if the user explicitly asked for website guidance / tour
+ */
+function isExplicitGuidanceRequest(text) {
+  if (!text) return false;
+  const t = text.toLowerCase();
+  const guidanceKeywords = [
+    "guide me",
+    "guide",
+    "tour",
+    "walkthrough",
+    "rasta",
+    "rasta batao",
+    "rasta dikhao",
+    "screen par guide",
+    "screen par dikhao",
+    "highlight karo",
+    "kaise navigate",
+    "navigate",
+    "take a tour",
+    "step by step guide",
+    "dikhao kahan hai",
+    "spotlight",
+    "on screen guide",
+    "kahan se dekhun",
+  ];
+  return guidanceKeywords.some((k) => t.includes(k));
+}
+
+/**
  * POST /api/chat
- * Ultra-Fast AI Concierge powered by Groq Cloud (llama-3.3-70b-versatile)
- * with n8n fallback and automatic Contact page CTA.
+ * Ultra-Fast AI Concierge powered by Groq Cloud
+ * with fallback and clean formatting.
  */
 export async function POST(request) {
   try {
@@ -74,7 +103,7 @@ export async function POST(request) {
           .join("\n");
 
         const systemPrompt = `You are the Senior AI Concierge for "${salonName}".
-Your mission is to welcome visitors, answer inquiries, guide them through website features, and promote ${salonName} with an elegant, warm, respectful, and luxurious tone.
+Your mission is to answer visitor questions directly, accurately, elegantly, and respectfully.
 
 LIVE SALON KNOWLEDGE BASE (100% Accurate & Current):
 - Salon Name: ${salonName}
@@ -85,31 +114,29 @@ LIVE SALON KNOWLEDGE BASE (100% Accurate & Current):
 CURRENT SERVICES & PRICING:
 ${servicesSummary}
 
-STRICT BUSINESS GUARDRAILS (CRITICAL):
-1. RELEVANCE: You must ONLY talk about ${salonName}, hair styling, skin treatments, facials, bridal packages, nail art, men's grooming, prices, policies, and website navigation.
-2. OUT-OF-SCOPE REJECTION: If a user asks about anything unrelated to our salon (e.g., coding, programming, mathematics, general world news, politics, history, other businesses or random chit-chat), POLITELY DECLINE and redirect them:
-   "I am exclusively trained to assist you with ${salonName}'s luxury treatments, appointments, and website navigation. How can we pamper you today?"
-3. NEVER INVENT OR HALLUCINATE: Never make up discounts, packages, or services that are not in the list above. Always use the exact service names and prices provided.
-4. BRAND PROMOTION: Always emphasize our clinical hygiene standards, certified master stylists, and 100% organic/premium international formulations.
-5. CONCISE, CLEAN FORMATTING:
-   - When listing services, provide 4-5 signature highlights on separate lines starting with a dash (- Service: Price) and advise them to explore the full menu on our Services page.
-   - Do NOT produce dense wall-of-text paragraphs.
-   - When user asks for guidance or how to visit/see a page (e.g. Gallery, Services, Contact), give clear step-by-step directions (e.g., Step 1: Look at the top navigation bar, Step 2: Click on the tab, or click the direct button below).
+CRITICAL RULES FOR RESPONDING (STRICT COMPLIANCE REQUIRED):
+1. DIRECT ANSWER TO THE QUESTION (TOP PRIORITY):
+   - When a user asks a simple question (e.g. haircut price, facial price, timings, address, phone number, bridal packages, services offered), ANSWER DIRECTLY AND IMMEDIATELY with the exact details, prices, or hours from the knowledge base.
+   - Do NOT tell the user to navigate the website, do NOT say "Step 1: Look at the top navigation bar, Step 2: Click on the Services tab", and do NOT deflect them to go check another page. Give them the actual answer right in your response!
 
-PUBLIC WEBSITE NAVIGATION ASSISTANCE (ONLY Public Customer Features):
-- Services & Prices: Advise them to explore the full menu on our Services page (/services).
-- Photo Gallery: Advise them to view real client transformations on the Gallery page (/gallery).
-- Appointment Booking: Advise them to submit an appointment request on our Contact page (/contact).
-- Direct Contact & Location: Advise them on our direct phone, WhatsApp chat, opening hours, and Google Maps directions on the Contact page (/contact).
-- Salon Story & Hygiene Standards: Advise them to read our story and clinical sterilization standards on the About page (/about).
-- Customer Account & Member Access: Advise them to Sign In (/login) to manage member privileges.
-- STRICT PRIVACY: NEVER disclose or discuss internal administrative tools, owner dashboard, revenue, staff management, or backend systems.
+2. ABSOLUTELY NO UNSOLICITED GUIDANCE OR WEBSITE TUTORIALS:
+   - Unless the user EXPLICITLY asks for website guidance (e.g. using words like "guide me", "rasta batao", "screen par guide karo", "how do I navigate", "show me on screen"), DO NOT provide website navigation instructions.
+   - Keep your focus 100% on answering the user's specific query.
 
-SPECIAL FALLBACK RULE:
-If a user asks for a customized bridal package, personalized hair consultation, or specific appointment booking, answer gracefully and state:
-"For this bespoke requirement, please submit an enquiry on our Contact page or reach out directly on WhatsApp so our master stylist can assist you personally."`;
+3. CLEAN, BEAUTIFUL, COMPILED FORMATTING:
+   - Provide answers in clean, readable text.
+   - Use clean bullet points (- Service: Price) or a clear markdown table when comparing services or listing prices.
+   - NEVER wrap your entire response in code blocks (\`\`\`markdown or \`\`\`). Output plain formatted markdown text directly so it compiles cleanly into rich text and tables for the customer.
+   - Keep responses elegant, well-spaced, and easy to read.
 
-        const groqResponse = await fetch("https://api.groq.com/openai/v1/chat/completions", {
+4. RELEVANCE & ACCURACY:
+   - Only discuss ${salonName}, hair styling, skin treatments, facials, bridal packages, nail art, grooming, prices, and salon care.
+   - If user asks about unrelated topics (coding, politics, general knowledge), politely decline:
+     "I am exclusively trained to assist you with ${salonName}'s luxury treatments and appointments. How can we pamper you today?"
+   - Never invent services or prices not listed above. Use the exact services and prices in Indian Rupees (₹).
+   - For custom packages or consultations, mention they can call or WhatsApp our desk at ${phone}.`;
+
+        let groqResponse = await fetch("https://api.groq.com/openai/v1/chat/completions", {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
@@ -122,16 +149,40 @@ If a user asks for a customized bridal package, personalized hair consultation, 
               { role: "user", content: message.trim() },
             ],
             temperature: 0.2,
-            max_tokens: 450,
+            max_tokens: 800,
           }),
         });
 
+        let groqData = null;
         if (groqResponse.ok) {
-          const groqData = await groqResponse.json();
-          const replyText =
-            groqData.choices?.[0]?.message?.content ||
-            "I am happy to assist you with our salon services! You can also reach our team directly.";
+          groqData = await groqResponse.json();
+        }
 
+        // Fast fallback to qwen/qwen3.8-27b if gpt-oss-120b returns empty content or fails
+        if (!groqData?.choices?.[0]?.message?.content) {
+          const fallbackRes = await fetch("https://api.groq.com/openai/v1/chat/completions", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${groqApiKey.trim()}`,
+            },
+            body: JSON.stringify({
+              model: "qwen/qwen3.8-27b",
+              messages: [
+                { role: "system", content: systemPrompt },
+                { role: "user", content: message.trim() },
+              ],
+              temperature: 0.2,
+              max_tokens: 500,
+            }),
+          });
+          if (fallbackRes.ok) {
+            groqData = await fallbackRes.json();
+          }
+        }
+
+        if (groqData?.choices?.[0]?.message?.content) {
+          const replyText = groqData.choices[0].message.content.trim();
           const lower = replyText.toLowerCase();
           const qLower = message.toLowerCase();
 
@@ -142,78 +193,74 @@ If a user asks for a customized bridal package, personalized hair consultation, 
             lower.includes("whatsapp") ||
             lower.includes("reach out");
 
-          // Detect if a tour / spotlight is relevant for ANY public feature
+          // Tour / Spotlight is ONLY suggested if the user explicitly asked for guidance!
           let suggestedTour = null;
           let suggestedPage = null;
 
-          if (
-            qLower.includes("gallery") ||
-            lower.includes("/gallery") ||
-            qLower.includes("photo") ||
-            qLower.includes("work") ||
-            qLower.includes("look") ||
-            qLower.includes("transformation")
-          ) {
-            suggestedTour = "gallery";
-            suggestedPage = "/gallery";
-          } else if (
-            qLower.includes("book") ||
-            qLower.includes("appoint") ||
-            qLower.includes("reserve") ||
-            qLower.includes("slot") ||
-            lower.includes("book an appointment")
-          ) {
-            suggestedTour = "booking";
-            suggestedPage = "/contact";
-          } else if (
-            qLower.includes("service") ||
-            lower.includes("/services") ||
-            qLower.includes("rate") ||
-            qLower.includes("price") ||
-            qLower.includes("cost") ||
-            qLower.includes("haircut") ||
-            qLower.includes("facial") ||
-            qLower.includes("spa") ||
-            qLower.includes("menu")
-          ) {
-            suggestedTour = "services";
-            suggestedPage = "/services";
-          } else if (
-            qLower.includes("contact") ||
-            lower.includes("/contact") ||
-            qLower.includes("phone") ||
-            qLower.includes("whatsapp") ||
-            qLower.includes("call") ||
-            qLower.includes("location") ||
-            qLower.includes("address") ||
-            qLower.includes("map") ||
-            qLower.includes("direction") ||
-            qLower.includes("hour") ||
-            qLower.includes("timing") ||
-            qLower.includes("where")
-          ) {
-            suggestedTour = "contact";
-            suggestedPage = "/contact";
-          } else if (
-            qLower.includes("about") ||
-            lower.includes("/about") ||
-            qLower.includes("story") ||
-            qLower.includes("hygiene") ||
-            qLower.includes("safety") ||
-            qLower.includes("stylist") ||
-            qLower.includes("product")
-          ) {
-            suggestedTour = "about";
-            suggestedPage = "/about";
-          } else if (
-            qLower.includes("account") ||
-            qLower.includes("login") ||
-            qLower.includes("signin") ||
-            qLower.includes("sign in") ||
-            qLower.includes("member")
-          ) {
-            suggestedTour = "account";
-            suggestedPage = "/login";
+          if (isExplicitGuidanceRequest(message)) {
+            if (
+              qLower.includes("gallery") ||
+              qLower.includes("photo") ||
+              qLower.includes("look") ||
+              qLower.includes("transformation")
+            ) {
+              suggestedTour = "gallery";
+              suggestedPage = "/gallery";
+            } else if (
+              qLower.includes("book") ||
+              qLower.includes("appoint") ||
+              qLower.includes("reserve") ||
+              qLower.includes("slot")
+            ) {
+              suggestedTour = "booking";
+              suggestedPage = "/contact";
+            } else if (
+              qLower.includes("service") ||
+              qLower.includes("rate") ||
+              qLower.includes("price") ||
+              qLower.includes("haircut") ||
+              qLower.includes("facial") ||
+              qLower.includes("spa") ||
+              qLower.includes("menu")
+            ) {
+              suggestedTour = "services";
+              suggestedPage = "/services";
+            } else if (
+              qLower.includes("contact") ||
+              qLower.includes("phone") ||
+              qLower.includes("whatsapp") ||
+              qLower.includes("location") ||
+              qLower.includes("address") ||
+              qLower.includes("map") ||
+              qLower.includes("hour") ||
+              qLower.includes("timing") ||
+              qLower.includes("where")
+            ) {
+              suggestedTour = "contact";
+              suggestedPage = "/contact";
+            } else if (
+              qLower.includes("about") ||
+              qLower.includes("story") ||
+              qLower.includes("hygiene") ||
+              qLower.includes("safety") ||
+              qLower.includes("stylist")
+            ) {
+              suggestedTour = "about";
+              suggestedPage = "/about";
+            } else if (
+              qLower.includes("account") ||
+              qLower.includes("login") ||
+              qLower.includes("signin") ||
+              qLower.includes("sign in") ||
+              qLower.includes("member")
+            ) {
+              suggestedTour = "account";
+              suggestedPage = "/login";
+            } else {
+              // Default tour if asked to guide generally
+              suggestedTour = "services";
+              suggestedPage = "/services";
+            }
           }
 
           return NextResponse.json({
@@ -223,7 +270,7 @@ If a user asks for a customized bridal package, personalized hair consultation, 
             suggestedPage,
           });
         } else {
-          console.error("[Groq API Error Status]:", groqResponse.status);
+          console.error("[Groq API Error Status]:", groqResponse?.status);
         }
       } catch (err) {
         console.error("[Groq Processing Error]:", err);

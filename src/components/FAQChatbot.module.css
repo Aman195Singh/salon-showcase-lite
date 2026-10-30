@@ -241,6 +241,102 @@
   flex-shrink: 0;
 }
 
+/* Markdown Table Styles */
+.tableWrapper {
+  width: 100%;
+  overflow-x: auto;
+  margin: 8px 0;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.05);
+  -webkit-overflow-scrolling: touch;
+}
+
+.markdownTable {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 11.5px;
+  text-align: left;
+  line-height: 1.4;
+}
+
+.markdownTable th {
+  background: var(--color-surface-hover);
+  color: var(--color-primary-dark);
+  font-weight: 700;
+  padding: 8px 10px;
+  border-bottom: 1.5px solid var(--color-border);
+  white-space: nowrap;
+}
+
+.markdownTable td {
+  padding: 7px 10px;
+  border-bottom: 1px solid var(--color-border-light);
+  color: var(--color-text);
+}
+
+.markdownTable tr:last-child td {
+  border-bottom: none;
+}
+
+.markdownTable tr:nth-child(even) {
+  background: rgba(139, 111, 78, 0.03);
+}
+
+.markdownTable tr:hover {
+  background: rgba(139, 111, 78, 0.06);
+}
+
+/* Headings */
+.mdHeading {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--color-primary-dark);
+  margin: 8px 0 3px 0;
+  line-height: 1.35;
+}
+
+.mdHeading:first-child {
+  margin-top: 0;
+}
+
+/* Ordered Lists */
+.orderedList {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  margin: 4px 0 4px 18px;
+  padding: 0;
+}
+
+.orderedListItem {
+  font-size: 12px;
+  line-height: 1.45;
+  color: var(--color-text);
+}
+
+/* Inline Code & Links */
+.inlineCode {
+  background: rgba(139, 111, 78, 0.1);
+  color: var(--color-primary-dark);
+  padding: 2px 5px;
+  border-radius: 4px;
+  font-size: 11px;
+  font-family: inherit;
+  font-weight: 600;
+}
+
+.inlineLink {
+  color: var(--color-primary);
+  text-decoration: underline;
+  font-weight: 600;
+}
+
+.inlineLink:hover {
+  color: var(--color-primary-dark);
+}
+
 /* Interactive Action Buttons inside Bot Message */
 .botActionsGrid {
   display: flex;
