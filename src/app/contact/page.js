@@ -392,6 +392,38 @@ export default function ContactPage() {
           </div>
         </div>
       </section>
+
+      {/* ===== GOOGLE MAP LOCATION (100% FREE EMBED) ===== */}
+      <section className={styles.mapSection}>
+        <div className="container">
+          <div className={styles.mapCard}>
+            <div className={styles.mapHeader}>
+              <span className="section-label">Find Us On Google Maps</span>
+              <h2 className={styles.mapTitle}>Our Salon Location</h2>
+              <p className={styles.mapAddress}>
+                {contactInfo.address || "SCO No. 387, Luxury Boulevard, Near City Centre"}
+              </p>
+            </div>
+            <div className={styles.mapContainer}>
+              <iframe
+                title="Salon Google Map Location"
+                src={
+                  contactInfo.mapEmbedUrl ||
+                  `https://maps.google.com/maps?q=${encodeURIComponent(
+                    contactInfo.address || "Luxury Boulevard, Near City Centre"
+                  )}&t=&z=15&ie=UTF8&iwloc=&output=embed`
+                }
+                width="100%"
+                height="420"
+                style={{ border: 0 }}
+                allowFullScreen=""
+                loading="lazy"
+                referrerPolicy="no-referrer-when-downgrade"
+              />
+            </div>
+          </div>
+        </div>
+      </section>
     </>
   );
 }
