@@ -6,14 +6,16 @@ import { supabase } from "./supabase";
  */
 export const DEFAULT_CONTENT = {
   general: {
-    salonName: "Luxury Salon",
+    salonName: "Bobby Unisex Salon",
     tagline: "Premium Unisex Salon & Spa",
     phone: "",
     whatsapp: "",
     email: "",
-    address: "Visit our salon for appointments & consultations.",
-    mapLink: "",
-    mapEmbedUrl: "",
+    address: "Bobby Unisex Salon, Bulandshahr, Uttar Pradesh",
+    mapLink:
+      "https://www.google.com/maps/place/Bobby+Unisex+Salon/@28.4025575,77.8550006,17.69z/data=!4m10!1m2!2m1!1sbobby+salon+bulandshahr!3m6!1s0x390ca6b5a5083669:0x483c9528a484bc70!8m2!3d28.4041184!4d77.8576064",
+    mapEmbedUrl:
+      "https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d1753.8!2d77.8576064!3d28.4041184!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x390ca6b5a5083669%3A0x483c9528a484bc70!2sBobby%20Unisex%20Salon!5e0!3m2!1sen!2sin!4v1700000000000!5m2!1sen!2sin",
     instagram: "",
     facebook: "",
     youtube: "",
@@ -48,9 +50,10 @@ export const DEFAULT_CONTENT = {
       "Have a question or want to book a visit? We would love to hear from you.",
     mapTitle: "Find Our Salon on Google Maps",
     mapDescription:
-      "Visit us at our studio or get exact turn-by-turn directions below.",
-    mapAddress: "SCO No. 387, Luxury Boulevard, Near City Centre",
-    mapEmbedUrl: "",
+      "Visit us at Bobby Unisex Salon, Bulandshahr. Get exact turn-by-turn directions below.",
+    mapAddress: "Bobby Unisex Salon, Bulandshahr, Uttar Pradesh",
+    mapEmbedUrl:
+      "https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d1753.8!2d77.8576064!3d28.4041184!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x390ca6b5a5083669%3A0x483c9528a484bc70!2sBobby%20Unisex%20Salon!5e0!3m2!1sen!2sin!4v1700000000000!5m2!1sen!2sin",
     socialLinks: [],
   },
   gallery: {

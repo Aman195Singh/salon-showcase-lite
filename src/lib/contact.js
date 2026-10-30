@@ -107,25 +107,71 @@ export function getSocialLink(platform, url) {
 /**
  * Resolves a safe Google Maps embed src URL from either:
  * 1. An explicit embed URL or <iframe> HTML snippet
- * 2. An address string fallback
+ * 2. A full Google Maps place URL (extracts place ID & coordinates)
+ * 3. An address string fallback
  */
-export function getMapEmbedSrc(customEmbed, address) {
-  if (customEmbed && typeof customEmbed === "string" && customEmbed.trim()) {
-    const trimmed = customEmbed.trim();
-    if (trimmed.includes("<iframe")) {
-      const match = trimmed.match(/src=["'](.*?)["']/i);
-      if (match && match[1]) {
-        return match[1];
-      }
-    }
-    if (/^https?:\/\//i.test(trimmed)) {
-      return trimmed;
+export function convertToGoogleMapsEmbed(url) {
+  if (!url || typeof url !== "string") return null;
+  const trimmed = url.trim();
+
+  // If inside iframe tag
+  if (trimmed.includes("<iframe")) {
+    const match = trimmed.match(/src=["'](.*?)["']/i);
+    if (match && match[1]) {
+      return convertToGoogleMapsEmbed(match[1]);
     }
   }
-  const query = (address && typeof address === "string" && address.trim())
-    ? address.trim()
-    : "Luxury Boulevard, Near City Centre";
-  return `https://maps.google.com/maps?q=${encodeURIComponent(query)}&t=&z=15&ie=UTF8&iwloc=&output=embed`;
+
+  // If already an embed URL
+  if (trimmed.includes("google.com/maps/embed") || (trimmed.includes("output=embed") && !trimmed.includes("/place/"))) {
+    return trimmed;
+  }
+
+  // Parse place hex ID and coordinates from Google Maps URLs
+  const hexMatch = trimmed.match(/!1s(0x[0-9a-fA-F]+:(0x[0-9a-fA-F]+))/);
+  const coords3d4d = trimmed.match(/!3d([0-9.-]+)!4d([0-9.-]+)/);
+  const placeMatch = trimmed.match(/\/place\/([^\/@?]+)/);
+
+  const placeName = placeMatch ? decodeURIComponent(placeMatch[1].replace(/\+/g, " ")) : "";
+  const lat = coords3d4d ? coords3d4d[1] : "";
+  const lng = coords3d4d ? coords3d4d[2] : "";
+
+  if (hexMatch && lat && lng) {
+    const encodedHex = encodeURIComponent(hexMatch[1]);
+    const encodedName = encodeURIComponent(placeName || "Location");
+    return `https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d1753.8!2d${lng}!3d${lat}!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s${encodedHex}!2s${encodedName}!5e0!3m2!1sen!2sin!4v1700000000000!5m2!1sen!2sin`;
+  }
+
+  if (placeName) {
+    return `https://maps.google.com/maps?q=${encodeURIComponent(placeName)}&output=embed`;
+  }
+
+  if (/^https?:\/\//i.test(trimmed)) {
+    return trimmed;
+  }
+
+  return null;
+}
+
+export function getMapEmbedSrc(customEmbed, address) {
+  if (customEmbed && typeof customEmbed === "string" && customEmbed.trim()) {
+    const converted = convertToGoogleMapsEmbed(customEmbed);
+    if (converted) return converted;
+  }
+
+  // If address itself is a Google Maps URL, convert it
+  if (address && typeof address === "string") {
+    const trimmedAddr = address.trim();
+    if (trimmedAddr.includes("google.com/maps") || trimmedAddr.includes("maps.app.goo.gl")) {
+      const converted = convertToGoogleMapsEmbed(trimmedAddr);
+      if (converted) return converted;
+    }
+    if (trimmedAddr) {
+      return `https://maps.google.com/maps?q=${encodeURIComponent(trimmedAddr)}&output=embed`;
+    }
+  }
+
+  return `https://maps.google.com/maps?q=Bobby%20Unisex%20Salon,%20Bulandshahr&output=embed`;
 }
 
 
