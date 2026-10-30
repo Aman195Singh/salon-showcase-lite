@@ -490,7 +490,7 @@ export default function EditWebsitePage() {
           }`}
           onClick={() => setActiveSection("general")}
         >
-          <HiOutlineInformationCircle size={16} /> General & Contact Details
+          <HiOutlineInformationCircle size={16} /> General &amp; Salon Info
         </button>
         <button
           className={`${styles.sectionTab} ${
@@ -514,7 +514,7 @@ export default function EditWebsitePage() {
           }`}
           onClick={() => setActiveSection("contact")}
         >
-          <HiOutlineLocationMarker size={16} /> Contact Page & Map Location
+          <HiOutlineLocationMarker size={16} /> Contact Page &amp; Google Map
         </button>
         <button
           className={`${styles.sectionTab} ${
@@ -556,10 +556,10 @@ export default function EditWebsitePage() {
         >
           <div className={styles.editorHeader}>
             <h3>
-              {activeSection === "general" && "Salon Business Info"}
+              {activeSection === "general" && "Salon Business Info & Google Map"}
               {activeSection === "home" && "Home Hero Section"}
               {activeSection === "about" && "About Story Content"}
-              {activeSection === "contact" && "Contact Page & Map Location"}
+              {activeSection === "contact" && "Contact Page & Google Map"}
               {activeSection === "gallery" && "Gallery Page & Photos"}
             </h3>
             <span className={styles.helperText}>Predefined safe fields</span>
@@ -633,31 +633,100 @@ export default function EditWebsitePage() {
                 </div>
 
                 <div className={styles.fieldGroup}>
-                  <label className={styles.label}>Physical Address</label>
+                  <label className={styles.label}>Physical Salon Address (Sets Google Map Pin)</label>
                   <textarea
                     className={styles.textarea}
+                    rows={2}
+                    placeholder="e.g. SCO No. 387, Iffco Chowk, Gurgaon"
                     value={content.general?.address || ""}
-                    onChange={(e) =>
-                      handleChange("general", "address", e.target.value)
-                    }
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      setContent((prev) => ({
+                        ...prev,
+                        general: { ...prev.general, address: val },
+                        contact: { ...prev.contact, mapAddress: val },
+                      }));
+                    }}
                   />
+                  <span className={styles.helperText}>
+                    📍 Google Map Pin: The interactive Google Map automatically centers and drops its red location pin on this address (100% Free).
+                  </span>
                 </div>
 
-                <div className={styles.fieldGroup}>
-                  <label className={styles.label}>Google Maps Link</label>
-                  <input
-                    type="url"
-                    className={styles.input}
-                    placeholder="https://maps.app.goo.gl/... or https://maps.google.com/?q=..."
-                    value={content.general?.mapLink || ""}
-                    onChange={(e) =>
-                      handleChange("general", "mapLink", e.target.value)
-                    }
-                  />
-                  {mapLinkError && <span className={styles.fieldError}>{mapLinkError}</span>}
-                  <span className={styles.helperText}>
-                    Paste your salon&apos;s Google Maps share link. Tapping the address on Contact page or Footer will open your location.
-                  </span>
+                {/* ===== GOOGLE MAP LOCATION & LIVE PIN SETTINGS IN GENERAL ===== */}
+                <div style={{ marginTop: "16px", marginBottom: "20px", padding: "16px", borderRadius: "10px", background: "var(--color-surface)", border: "1px solid var(--color-border)" }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "12px" }}>
+                    <div style={{ color: "var(--color-primary)", display: "flex", fontSize: "20px" }}>
+                      <HiOutlineLocationMarker size={22} />
+                    </div>
+                    <div>
+                      <h4 style={{ margin: 0, fontSize: "14px", fontWeight: "700", color: "var(--color-text-primary)" }}>
+                        Google Map Location &amp; Pin Settings
+                      </h4>
+                      <p style={{ margin: 0, fontSize: "12px", color: "var(--color-text-secondary)" }}>
+                        Set the exact location for the interactive Google Map shown on your website
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className={styles.fieldGroup}>
+                    <label className={styles.label}>Map Location / Address Pin</label>
+                    <input
+                      type="text"
+                      className={styles.input}
+                      placeholder="e.g. SCO No. 387, Iffco Chowk, Gurgaon"
+                      value={content.contact?.mapAddress || content.general?.address || ""}
+                      onChange={(e) => {
+                        const val = e.target.value;
+                        setContent((prev) => ({
+                          ...prev,
+                          contact: { ...prev.contact, mapAddress: val },
+                          general: { ...prev.general, address: prev.general?.address || val },
+                        }));
+                      }}
+                    />
+                    <span className={styles.helperText}>
+                      Type any salon address, shop number, road, or landmark. Google Map pin centers here in real-time.
+                    </span>
+                  </div>
+
+                  <div className={styles.fieldGroup}>
+                    <label className={styles.label}>Google Maps Directions Share Link (Optional)</label>
+                    <input
+                      type="url"
+                      className={styles.input}
+                      placeholder="https://maps.app.goo.gl/... or https://maps.google.com/?q=..."
+                      value={content.general?.mapLink || ""}
+                      onChange={(e) =>
+                        handleChange("general", "mapLink", e.target.value)
+                      }
+                    />
+                    {mapLinkError && <span className={styles.fieldError}>{mapLinkError}</span>}
+                    <span className={styles.helperText}>
+                      Paste your salon&apos;s Google Maps share link. Tapping the address on Contact page or Footer will open turn-by-turn navigation.
+                    </span>
+                  </div>
+
+                  <div className={styles.fieldGroup} style={{ marginBottom: 0 }}>
+                    <label className={styles.label}>Custom Google Maps Embed URL or &lt;iframe&gt; (Optional Advanced)</label>
+                    <textarea
+                      className={styles.textarea}
+                      rows={2}
+                      placeholder="Optional: Paste custom Google Maps embed URL or <iframe> snippet..."
+                      value={content.contact?.mapEmbedUrl || content.general?.mapEmbedUrl || ""}
+                      onChange={(e) => {
+                        const val = e.target.value;
+                        setContent((prev) => ({
+                          ...prev,
+                          contact: { ...prev.contact, mapEmbedUrl: val },
+                          general: { ...prev.general, mapEmbedUrl: val },
+                        }));
+                      }}
+                    />
+                    <span className={styles.helperText}>
+                      Tip: If your salon has a Google My Business profile, open Google Maps → Share → &quot;Embed a map&quot; and paste the URL or &lt;iframe&gt; snippet here. If left empty, it will automatically use your Map Address above.
+                    </span>
+                  </div>
                 </div>
 
                 <div className={styles.fieldGroup}>
@@ -942,10 +1011,15 @@ export default function EditWebsitePage() {
                       type="text"
                       className={styles.input}
                       placeholder="e.g. SCO No. 387, Iffco Chowk, Gurgaon"
-                      value={content.contact?.mapAddress !== undefined ? content.contact.mapAddress : (content.general?.address || "")}
-                      onChange={(e) =>
-                        handleChange("contact", "mapAddress", e.target.value)
-                      }
+                      value={content.contact?.mapAddress || content.general?.address || ""}
+                      onChange={(e) => {
+                        const val = e.target.value;
+                        setContent((prev) => ({
+                          ...prev,
+                          contact: { ...prev.contact, mapAddress: val },
+                          general: { ...prev.general, address: prev.general?.address || val },
+                        }));
+                      }}
                     />
                     <span className={styles.helperText}>
                       Type any salon address, shop number, road, or city. The Google Map automatically centers and drops a location pin here in real time (100% Free).
@@ -984,10 +1058,15 @@ export default function EditWebsitePage() {
                       className={styles.textarea}
                       rows={2}
                       placeholder="Optional: Paste custom Google Maps embed URL or <iframe> code from Google Maps Share..."
-                      value={content.contact?.mapEmbedUrl || ""}
-                      onChange={(e) =>
-                        handleChange("contact", "mapEmbedUrl", e.target.value)
-                      }
+                      value={content.contact?.mapEmbedUrl || content.general?.mapEmbedUrl || ""}
+                      onChange={(e) => {
+                        const val = e.target.value;
+                        setContent((prev) => ({
+                          ...prev,
+                          contact: { ...prev.contact, mapEmbedUrl: val },
+                          general: { ...prev.general, mapEmbedUrl: val },
+                        }));
+                      }}
                     />
                     <span className={styles.helperText}>
                       Tip: If your salon has a Google My Business profile, open Google Maps → Share → &quot;Embed a map&quot; and paste the URL or &lt;iframe&gt; snippet here. If left empty, it will automatically use your Map Address above.
@@ -1451,6 +1530,34 @@ export default function EditWebsitePage() {
                         <span>Google Maps Location Linked</span>
                       </div>
                     )}
+
+                    {/* Live Google Map in General Preview */}
+                    <div style={{ marginTop: "16px", paddingTop: "14px", borderTop: "1px solid var(--color-border-light)" }}>
+                      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "4px" }}>
+                        <span style={{ fontSize: "11px", fontWeight: "700", color: "var(--color-primary)", textTransform: "uppercase", letterSpacing: "0.05em" }}>
+                          LIVE GOOGLE MAP PREVIEW
+                        </span>
+                        <span style={{ fontSize: "10px", color: "var(--color-text-tertiary)" }}>
+                          100% Free Live Embed
+                        </span>
+                      </div>
+                      <p style={{ fontSize: "12px", color: "var(--color-text-secondary)", marginBottom: "8px" }}>
+                        📍 {content.contact?.mapAddress || content.general?.address || "SCO No. 387, Luxury Boulevard, Near City Centre"}
+                      </p>
+                      <div style={{ borderRadius: "8px", overflow: "hidden", border: "1px solid var(--color-border-light)", height: "200px", background: "#f1f5f9" }}>
+                        <iframe
+                          title="General Map Preview"
+                          src={getMapEmbedSrc(
+                            content.contact?.mapEmbedUrl || content.general?.mapEmbedUrl,
+                            content.contact?.mapAddress || content.general?.address
+                          )}
+                          width="100%"
+                          height="100%"
+                          style={{ border: 0, display: "block" }}
+                          loading="lazy"
+                        />
+                      </div>
+                    </div>
 
                     {socialList && socialList.filter(l => l.url?.trim()).length > 0 && (
                       <div style={{ marginTop: "16px", paddingTop: "14px", borderTop: "1px solid var(--color-border-light)" }}>
