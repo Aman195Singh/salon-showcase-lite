@@ -45,6 +45,7 @@ import {
   isValidWhatsApp,
   isValidEmail,
   isValidMapLink,
+  getMapEmbedSrc,
 } from "@/lib/contact";
 import { useAuth } from "@/context/AuthContext";
 import styles from "./edit.module.css";
@@ -513,7 +514,7 @@ export default function EditWebsitePage() {
           }`}
           onClick={() => setActiveSection("contact")}
         >
-          <HiOutlineLocationMarker size={16} /> Contact Page Headings
+          <HiOutlineLocationMarker size={16} /> Contact Page & Map Location
         </button>
         <button
           className={`${styles.sectionTab} ${
@@ -558,7 +559,7 @@ export default function EditWebsitePage() {
               {activeSection === "general" && "Salon Business Info"}
               {activeSection === "home" && "Home Hero Section"}
               {activeSection === "about" && "About Story Content"}
-              {activeSection === "contact" && "Contact Intro"}
+              {activeSection === "contact" && "Contact Page & Map Location"}
               {activeSection === "gallery" && "Gallery Page & Photos"}
             </h3>
             <span className={styles.helperText}>Predefined safe fields</span>
@@ -917,6 +918,81 @@ export default function EditWebsitePage() {
                       handleChange("contact", "description", e.target.value)
                     }
                   />
+                </div>
+
+                {/* ===== GOOGLE MAP LOCATION & LIVE PIN SETTINGS ===== */}
+                <div style={{ marginTop: "24px", marginBottom: "24px", padding: "18px", borderRadius: "10px", background: "var(--color-surface)", border: "1px solid var(--color-border)" }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "14px" }}>
+                    <div style={{ color: "var(--color-primary)", display: "flex", fontSize: "20px" }}>
+                      <HiOutlineLocationMarker size={22} />
+                    </div>
+                    <div>
+                      <h4 style={{ margin: 0, fontSize: "14px", fontWeight: "700", color: "var(--color-text-primary)" }}>
+                        Google Map Location &amp; Pin Settings
+                      </h4>
+                      <p style={{ margin: 0, fontSize: "12px", color: "var(--color-text-secondary)" }}>
+                        Control the interactive Google Map shown at the bottom of your Contact page
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className={styles.fieldGroup}>
+                    <label className={styles.label}>Map Location / Address Pin</label>
+                    <input
+                      type="text"
+                      className={styles.input}
+                      placeholder="e.g. SCO No. 387, Iffco Chowk, Gurgaon"
+                      value={content.contact?.mapAddress !== undefined ? content.contact.mapAddress : (content.general?.address || "")}
+                      onChange={(e) =>
+                        handleChange("contact", "mapAddress", e.target.value)
+                      }
+                    />
+                    <span className={styles.helperText}>
+                      Type any salon address, shop number, road, or city. The Google Map automatically centers and drops a location pin here in real time (100% Free).
+                    </span>
+                  </div>
+
+                  <div className={styles.fieldGroup}>
+                    <label className={styles.label}>Map Section Title (Heading)</label>
+                    <input
+                      type="text"
+                      className={styles.input}
+                      placeholder="Our Salon Location"
+                      value={content.contact?.mapTitle || ""}
+                      onChange={(e) =>
+                        handleChange("contact", "mapTitle", e.target.value)
+                      }
+                    />
+                  </div>
+
+                  <div className={styles.fieldGroup}>
+                    <label className={styles.label}>Map Directions Note (Optional Subtitle)</label>
+                    <input
+                      type="text"
+                      className={styles.input}
+                      placeholder="e.g. Visit us at our studio or get exact turn-by-turn directions below."
+                      value={content.contact?.mapDescription || ""}
+                      onChange={(e) =>
+                        handleChange("contact", "mapDescription", e.target.value)
+                      }
+                    />
+                  </div>
+
+                  <div className={styles.fieldGroup} style={{ marginBottom: 0 }}>
+                    <label className={styles.label}>Custom Google Maps Embed URL or &lt;iframe&gt; (Optional Advanced)</label>
+                    <textarea
+                      className={styles.textarea}
+                      rows={2}
+                      placeholder="Optional: Paste custom Google Maps embed URL or <iframe> code from Google Maps Share..."
+                      value={content.contact?.mapEmbedUrl || ""}
+                      onChange={(e) =>
+                        handleChange("contact", "mapEmbedUrl", e.target.value)
+                      }
+                    />
+                    <span className={styles.helperText}>
+                      Tip: If your salon has a Google My Business profile, open Google Maps → Share → &quot;Embed a map&quot; and paste the URL or &lt;iframe&gt; snippet here. If left empty, it will automatically use your Map Address above.
+                    </span>
+                  </div>
                 </div>
 
                 <div className={styles.fieldGroup}>
@@ -1622,6 +1698,42 @@ export default function EditWebsitePage() {
                       </div>
                     </div>
                   )}
+
+                  {/* Live Google Map Preview in Contact Preview */}
+                  <div style={{ marginTop: "24px", paddingTop: "20px", borderTop: "1px solid var(--color-border-light)" }}>
+                    <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "8px" }}>
+                      <span style={{ fontSize: "11px", fontWeight: "700", color: "var(--color-primary)", textTransform: "uppercase", letterSpacing: "0.05em" }}>
+                        GOOGLE MAP PREVIEW
+                      </span>
+                      <span style={{ fontSize: "11px", color: "var(--color-text-tertiary)" }}>
+                        100% Free Live Embed
+                      </span>
+                    </div>
+                    <h3 style={{ fontSize: "16px", fontWeight: "700", color: "var(--color-text-primary)", marginBottom: "4px" }}>
+                      {content.contact?.mapTitle || "Our Salon Location"}
+                    </h3>
+                    <p style={{ fontSize: "13px", color: "var(--color-text-secondary)", marginBottom: "12px", display: "flex", alignItems: "center", gap: "4px" }}>
+                      <span>📍</span> {content.contact?.mapAddress || content.general?.address || "SCO No. 387, Luxury Boulevard, Near City Centre"}
+                    </p>
+                    {content.contact?.mapDescription && (
+                      <p style={{ fontSize: "12px", color: "var(--color-text-secondary)", marginBottom: "10px" }}>
+                        {content.contact.mapDescription}
+                      </p>
+                    )}
+                    <div style={{ borderRadius: "10px", overflow: "hidden", border: "1px solid var(--color-border-light)", boxShadow: "0 2px 8px rgba(0,0,0,0.06)", height: "240px", background: "#f1f5f9" }}>
+                      <iframe
+                        title="Contact Map Preview"
+                        src={getMapEmbedSrc(
+                          content.contact?.mapEmbedUrl || content.general?.mapEmbedUrl,
+                          content.contact?.mapAddress || content.general?.address
+                        )}
+                        width="100%"
+                        height="100%"
+                        style={{ border: 0, display: "block" }}
+                        loading="lazy"
+                      />
+                    </div>
+                  </div>
                 </div>
               )}
 

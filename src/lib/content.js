@@ -13,6 +13,7 @@ export const DEFAULT_CONTENT = {
     email: "",
     address: "Visit our salon for appointments & consultations.",
     mapLink: "",
+    mapEmbedUrl: "",
     instagram: "",
     facebook: "",
     youtube: "",
@@ -45,6 +46,11 @@ export const DEFAULT_CONTENT = {
     title: "Get in Touch",
     description:
       "Have a question or want to book a visit? We would love to hear from you.",
+    mapTitle: "Find Our Salon on Google Maps",
+    mapDescription:
+      "Visit us at our studio or get exact turn-by-turn directions below.",
+    mapAddress: "SCO No. 387, Luxury Boulevard, Near City Centre",
+    mapEmbedUrl: "",
     socialLinks: [],
   },
   gallery: {

@@ -32,6 +32,7 @@ import {
   getMailtoLink,
   getMapLink,
   getSocialLink,
+  getMapEmbedSrc,
 } from "@/lib/contact";
 
 function renderSocialIcon(platform) {
@@ -399,20 +400,25 @@ export default function ContactPage() {
           <div className={styles.mapCard}>
             <div className={styles.mapHeader}>
               <span className="section-label">Find Us On Google Maps</span>
-              <h2 className={styles.mapTitle}>Our Salon Location</h2>
+              <h2 className={styles.mapTitle}>
+                {contactPage?.mapTitle || "Our Salon Location"}
+              </h2>
               <p className={styles.mapAddress}>
-                {contactInfo.address || "SCO No. 387, Luxury Boulevard, Near City Centre"}
+                {contactPage?.mapAddress || contactInfo?.address || "SCO No. 387, Luxury Boulevard, Near City Centre"}
               </p>
+              {contactPage?.mapDescription && (
+                <p style={{ fontSize: "14px", color: "var(--color-text-secondary)", marginTop: "4px" }}>
+                  {contactPage.mapDescription}
+                </p>
+              )}
             </div>
             <div className={styles.mapContainer}>
               <iframe
                 title="Salon Google Map Location"
-                src={
-                  contactInfo.mapEmbedUrl ||
-                  `https://maps.google.com/maps?q=${encodeURIComponent(
-                    contactInfo.address || "Luxury Boulevard, Near City Centre"
-                  )}&t=&z=15&ie=UTF8&iwloc=&output=embed`
-                }
+                src={getMapEmbedSrc(
+                  contactPage?.mapEmbedUrl || contactInfo?.mapEmbedUrl,
+                  contactPage?.mapAddress || contactInfo?.address
+                )}
                 width="100%"
                 height="420"
                 style={{ border: 0 }}

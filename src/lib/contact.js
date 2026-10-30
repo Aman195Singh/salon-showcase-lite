@@ -104,3 +104,28 @@ export function getSocialLink(platform, url) {
   return `https://${trimmed}`;
 }
 
+/**
+ * Resolves a safe Google Maps embed src URL from either:
+ * 1. An explicit embed URL or <iframe> HTML snippet
+ * 2. An address string fallback
+ */
+export function getMapEmbedSrc(customEmbed, address) {
+  if (customEmbed && typeof customEmbed === "string" && customEmbed.trim()) {
+    const trimmed = customEmbed.trim();
+    if (trimmed.includes("<iframe")) {
+      const match = trimmed.match(/src=["'](.*?)["']/i);
+      if (match && match[1]) {
+        return match[1];
+      }
+    }
+    if (/^https?:\/\//i.test(trimmed)) {
+      return trimmed;
+    }
+  }
+  const query = (address && typeof address === "string" && address.trim())
+    ? address.trim()
+    : "Luxury Boulevard, Near City Centre";
+  return `https://maps.google.com/maps?q=${encodeURIComponent(query)}&t=&z=15&ie=UTF8&iwloc=&output=embed`;
+}
+
+
