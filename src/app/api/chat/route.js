@@ -38,7 +38,7 @@ function isExplicitGuidanceRequest(text) {
  */
 export async function POST(request) {
   try {
-    const { message, sessionId } = await request.json();
+    const { message, sessionId, currentPage = "/" } = await request.json();
 
     if (!message || typeof message !== "string" || !message.trim()) {
       return NextResponse.json({ error: "Message is required." }, { status: 400 });
@@ -105,6 +105,9 @@ export async function POST(request) {
         const systemPrompt = `You are the Senior AI Concierge for "${salonName}".
 Your mission is to answer visitor questions directly, accurately, elegantly, and respectfully.
 
+CURRENT USER CONTEXT:
+- The user is currently browsing on page: "${currentPage || "/"}"
+
 LIVE SALON KNOWLEDGE BASE (100% Accurate & Current):
 - Salon Name: ${salonName}
 - Contact Phone / WhatsApp: ${phone}
@@ -114,27 +117,44 @@ LIVE SALON KNOWLEDGE BASE (100% Accurate & Current):
 CURRENT SERVICES & PRICING:
 ${servicesSummary}
 
+WEBSITE ARCHITECTURE & EXACT FEATURE LOCATIONS (CRITICAL):
+1. HEADER NAVIGATION (Available on all pages):
+   - Brand Logo & "Home" (#nav-home / /): Returns to the main Landing / Home Showcase page from ANY page.
+   - "Services" (#nav-services / /services): Full treatments menu with pricing and duration.
+   - "About" (#nav-about / /about): Salon founding story, master stylists, and clinical hygiene protocols.
+   - "Gallery" (#nav-gallery / /gallery): High-resolution client transformation photos with category filter tabs and lightbox.
+   - "Contact" (#nav-contact / /contact): Direct phone, WhatsApp chat, opening hours, Google Maps directions, and booking enquiry form.
+   - Top-Right Header Icon:
+     * When Signed In: User's Profile Avatar / initials (#nav-profile). Clicking it opens the account dropdown with link to "My Account & Security" (/account) and Sign Out.
+     * When Not Signed In: "Sign In" button (#nav-signin / /login).
+     * For Salon Owner/Admin: "Admin" button (#nav-admin / /dashboard).
+
+2. MEMBER ACCOUNT & PROFILE SETTINGS (/account):
+   - Where is Profile Icon: Located at top-right of header (#nav-profile).
+   - How to change Profile Picture / Avatar: Go to /account -> select "Profile Info" tab (#account-tab-profile) -> click upload photo.
+   - How to change Password: Go to /account -> select "Change Password" tab (#account-tab-security) -> enter new password and save.
+   - How to check Booking Enquiries: Go to /account -> select "My Enquiries" tab (#account-tab-history) to track all submitted appointment requests and statuses.
+   - For Salon Owners: Can manage all customer enquiries in Admin Dashboard (/dashboard/enquiries).
+
+3. EXACT ANSWERS FOR COMMON NAVIGATION & ACCOUNT QUESTIONS:
+   - If user asks where Profile Icon is: Explain that it is in the top-right corner of the header navigation bar.
+   - If user asks where/how to change password: Tell them to go to /account and use the "Change Password" tab.
+   - If user asks where/how to change profile photo/avatar: Tell them to go to /account and use the "Profile Info" tab.
+   - If user asks where to check inquiries: Tell them to check the "My Enquiries" tab on their /account page (or /dashboard/enquiries for owner).
+   - If user asks where Landing Page / Home is: Tell them to click "Home" or the salon brand logo at the top-left of the header.
+
 CRITICAL RULES FOR RESPONDING (STRICT COMPLIANCE REQUIRED):
 1. DIRECT ANSWER TO THE QUESTION (TOP PRIORITY):
-   - When a user asks a simple question (e.g. haircut price, facial price, timings, address, phone number, bridal packages, services offered), ANSWER DIRECTLY AND IMMEDIATELY with the exact details, prices, or hours from the knowledge base.
-   - Do NOT tell the user to navigate the website, do NOT say "Step 1: Look at the top navigation bar, Step 2: Click on the Services tab", and do NOT deflect them to go check another page. Give them the actual answer right in your response!
+   - When a user asks a simple question (e.g. prices, timings, location, where profile icon is, how to change password, where is home page), ANSWER DIRECTLY AND IMMEDIATELY with the exact details.
+   - Do NOT give unsolicited step-by-step navigation tutorials unless the user EXPLICITLY asks to be guided ("guide me", "rasta batao", "screen par guide karo", "show me on screen").
 
-2. ABSOLUTELY NO UNSOLICITED GUIDANCE OR WEBSITE TUTORIALS:
-   - Unless the user EXPLICITLY asks for website guidance (e.g. using words like "guide me", "rasta batao", "screen par guide karo", "how do I navigate", "show me on screen"), DO NOT provide website navigation instructions.
-   - Keep your focus 100% on answering the user's specific query.
+2. CLEAN, BEAUTIFUL, COMPILED FORMATTING:
+   - Provide answers in clean, readable text with bullet points (- Service: Price) or markdown tables.
+   - Never wrap entire responses in code blocks (\`\`\`markdown). Output plain structured markdown.
 
-3. CLEAN, BEAUTIFUL, COMPILED FORMATTING:
-   - Provide answers in clean, readable text.
-   - Use clean bullet points (- Service: Price) or a clear markdown table when comparing services or listing prices.
-   - NEVER wrap your entire response in code blocks (\`\`\`markdown or \`\`\`). Output plain formatted markdown text directly so it compiles cleanly into rich text and tables for the customer.
-   - Keep responses elegant, well-spaced, and easy to read.
-
-4. RELEVANCE & ACCURACY:
-   - Only discuss ${salonName}, hair styling, skin treatments, facials, bridal packages, nail art, grooming, prices, and salon care.
-   - If user asks about unrelated topics (coding, politics, general knowledge), politely decline:
-     "I am exclusively trained to assist you with ${salonName}'s luxury treatments and appointments. How can we pamper you today?"
-   - Never invent services or prices not listed above. Use the exact services and prices in Indian Rupees (₹).
-   - For custom packages or consultations, mention they can call or WhatsApp our desk at ${phone}.`;
+3. RELEVANCE & ACCURACY:
+   - Only discuss ${salonName}, hair styling, skin treatments, facials, bridal packages, nail art, grooming, prices, website features, and salon care.
+   - For custom packages or consultations, mention phone or WhatsApp at ${phone}.`;
 
         let groqResponse = await fetch("https://api.groq.com/openai/v1/chat/completions", {
           method: "POST",
@@ -199,6 +219,38 @@ CRITICAL RULES FOR RESPONDING (STRICT COMPLIANCE REQUIRED):
 
           if (isExplicitGuidanceRequest(message)) {
             if (
+              qLower.includes("home") ||
+              qLower.includes("landing") ||
+              qLower.includes("main page") ||
+              qLower.includes("front page")
+            ) {
+              suggestedTour = "home";
+              suggestedPage = "/";
+            } else if (
+              qLower.includes("password") ||
+              qLower.includes("change pass") ||
+              qLower.includes("reset pass")
+            ) {
+              suggestedTour = "password";
+              suggestedPage = "/account";
+            } else if (
+              qLower.includes("inquir") ||
+              qLower.includes("enquir")
+            ) {
+              suggestedTour = "inquiries";
+              suggestedPage = "/account";
+            } else if (
+              qLower.includes("profile") ||
+              qLower.includes("avatar") ||
+              qLower.includes("account") ||
+              qLower.includes("login") ||
+              qLower.includes("signin") ||
+              qLower.includes("sign in") ||
+              qLower.includes("member")
+            ) {
+              suggestedTour = "profile";
+              suggestedPage = "/account";
+            } else if (
               qLower.includes("gallery") ||
               qLower.includes("photo") ||
               qLower.includes("look") ||
@@ -247,19 +299,27 @@ CRITICAL RULES FOR RESPONDING (STRICT COMPLIANCE REQUIRED):
             ) {
               suggestedTour = "about";
               suggestedPage = "/about";
-            } else if (
-              qLower.includes("account") ||
-              qLower.includes("login") ||
-              qLower.includes("signin") ||
-              qLower.includes("sign in") ||
-              qLower.includes("member")
-            ) {
-              suggestedTour = "account";
-              suggestedPage = "/login";
             } else {
-              // Default tour if asked to guide generally
-              suggestedTour = "services";
-              suggestedPage = "/services";
+              // Respect current page if asked to guide generally
+              if (currentPage === "/gallery") {
+                suggestedTour = "gallery";
+                suggestedPage = "/gallery";
+              } else if (currentPage === "/contact") {
+                suggestedTour = "contact";
+                suggestedPage = "/contact";
+              } else if (currentPage === "/about") {
+                suggestedTour = "about";
+                suggestedPage = "/about";
+              } else if (currentPage === "/account") {
+                suggestedTour = "profile";
+                suggestedPage = "/account";
+              } else if (currentPage === "/") {
+                suggestedTour = "home";
+                suggestedPage = "/";
+              } else {
+                suggestedTour = "services";
+                suggestedPage = "/services";
+              }
             }
           }
 

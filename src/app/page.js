@@ -87,7 +87,7 @@ export default async function HomePage() {
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
       {/* ===== HERO SECTION ===== */}
-      <section className={styles.hero}>
+      <section id="home-hero-section" className={styles.hero}>
         <div className={styles.heroOverlay} />
         <div className={`container ${styles.heroContent}`}>
           <span className={styles.heroLabel}>

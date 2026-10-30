@@ -397,6 +397,7 @@ export default function AccountPage() {
               
 
               <button
+                id="account-tab-profile"
                 className={`${styles.tabBtn} ${
                   activeTab === "profile" ? styles.tabBtnActive : ""
                 }`}
@@ -407,6 +408,7 @@ export default function AccountPage() {
               </button>
 
               <button
+                id="account-tab-security"
                 className={`${styles.tabBtn} ${
                   activeTab === "security" ? styles.tabBtnActive : ""
                 }`}
@@ -417,6 +419,7 @@ export default function AccountPage() {
               </button>
 
               <button
+                id="account-tab-history"
                 className={`${styles.tabBtn} ${
                   activeTab === "history" ? styles.tabBtnActive : ""
                 }`}

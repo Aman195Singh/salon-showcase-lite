@@ -4,6 +4,24 @@ import { createContext, useContext, useState, useEffect, useCallback } from "rea
 import { usePathname, useRouter } from "next/navigation";
 
 export const TOUR_DEFINITIONS = {
+  home: [
+    {
+      targetId: "nav-home",
+      title: "Step 1: Home & Landing Link",
+      description: "Click 'Home' in the header navigation (or tap the salon logo at top-left) to visit the main showcase landing page.",
+      actionLabel: "Visit Home Page →",
+      path: "/services",
+      nextPath: "/",
+    },
+    {
+      targetId: "home-hero-section",
+      title: "Step 2: Salon Showcase & Featured Rituals",
+      description: "Welcome to our main showcase! Here you can view our signature atmosphere, explore featured rituals, and book appointments.",
+      actionLabel: "Finish Guide ✓",
+      path: "/",
+      isLast: true,
+    },
+  ],
   gallery: [
     {
       targetId: "nav-gallery",
@@ -115,12 +133,85 @@ export const TOUR_DEFINITIONS = {
       isLast: true,
     },
   ],
+  profile: [
+    {
+      targetId: "nav-profile",
+      title: "Step 1: Your Profile Avatar in Header",
+      description: "Your Profile Icon is at the top-right corner of the header navigation! Click here to open your account menu, or proceed to Account Settings.",
+      actionLabel: "Go to Account Settings →",
+      nextPath: "/account",
+    },
+    {
+      targetId: "account-tab-profile",
+      title: "Step 2: Profile Picture & Display Name",
+      description: "Under the 'Profile Info' tab, you can upload or change your profile picture and update your name.",
+      actionLabel: "Next: Password Security →",
+      path: "/account",
+    },
+    {
+      targetId: "account-tab-security",
+      title: "Step 3: Change Password & Security",
+      description: "Under the 'Change Password' tab, you can enter a new password to keep your account secure.",
+      actionLabel: "Next: My Enquiries →",
+      path: "/account",
+    },
+    {
+      targetId: "account-tab-history",
+      title: "Step 4: Check Booking Enquiries",
+      description: "Under 'My Enquiries', track all your submitted salon appointment requests and their confirmation status.",
+      actionLabel: "Finish Guide ✓",
+      path: "/account",
+      isLast: true,
+    },
+  ],
+  password: [
+    {
+      targetId: "nav-profile",
+      title: "Step 1: Account Navigation in Header",
+      description: "Your Profile Avatar is located at the top-right of the header. Access account settings from here.",
+      actionLabel: "Open Security Tab →",
+      nextPath: "/account",
+    },
+    {
+      targetId: "account-tab-security",
+      title: "Step 2: Change Password",
+      description: "Click this tab to securely update your account password at any time.",
+      actionLabel: "Finish Guide ✓",
+      path: "/account",
+      isLast: true,
+    },
+  ],
+  inquiries: [
+    {
+      targetId: "nav-profile",
+      title: "Step 1: Account Navigation in Header",
+      description: "Click your profile avatar at the top-right of the header to open your account settings.",
+      actionLabel: "Open My Enquiries →",
+      nextPath: "/account",
+    },
+    {
+      targetId: "account-tab-history",
+      title: "Step 2: Review Booking Enquiries",
+      description: "Check the status of all your submitted appointments, requested dates, and notes right here.",
+      actionLabel: "Finish Guide ✓",
+      path: "/account",
+      isLast: true,
+    },
+  ],
   account: [
     {
-      targetId: "nav-signin",
-      title: "Customer Account & Privileges",
-      description: "Sign In or create your Member profile to manage appointments, preferences, and salon benefits.",
+      targetId: "nav-profile",
+      title: "Step 1: Profile Icon & Member Access",
+      description: "Your profile avatar icon is located at the top-right corner of the header navigation.",
+      actionLabel: "Open Account Settings →",
+      nextPath: "/account",
+    },
+    {
+      targetId: "account-tab-profile",
+      title: "Step 2: Manage Profile & Security",
+      description: "Here you can update your avatar picture, change your password, and check booking inquiries.",
       actionLabel: "Finish Guide ✓",
+      path: "/account",
       isLast: true,
     },
   ],
@@ -166,14 +257,28 @@ export function TourProvider({ children }) {
   const currentSteps = activeTour ? TOUR_DEFINITIONS[activeTour] || [] : [];
   let currentStep = currentSteps[stepIndex] || null;
 
-  // Dynamic target resolution for account button (logged in profile vs guest sign in)
-  if (currentStep && currentStep.targetId === "nav-signin" && typeof document !== "undefined") {
-    if (!document.getElementById("nav-signin") && document.getElementById("nav-profile")) {
+  // Dynamic target resolution for account button (logged in profile avatar vs guest sign in)
+  if (
+    currentStep &&
+    (currentStep.targetId === "nav-signin" || currentStep.targetId === "nav-profile") &&
+    typeof document !== "undefined"
+  ) {
+    const hasProfile = Boolean(document.getElementById("nav-profile"));
+    const hasSignIn = Boolean(document.getElementById("nav-signin"));
+
+    if (currentStep.targetId === "nav-signin" && !hasSignIn && hasProfile) {
       currentStep = {
         ...currentStep,
         targetId: "nav-profile",
-        title: "Your Member Profile",
-        description: "You are currently signed in! Click your avatar to manage your account and security settings.",
+        title: "Your Member Profile Avatar",
+        description: "You are currently signed in! Your avatar is located right here in the top-right of the header.",
+      };
+    } else if (currentStep.targetId === "nav-profile" && !hasProfile && hasSignIn) {
+      currentStep = {
+        ...currentStep,
+        targetId: "nav-signin",
+        title: "Member Sign In / Account",
+        description: "Click Sign In here in the top-right corner to log into your account and access your profile.",
       };
     }
   }

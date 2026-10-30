@@ -125,7 +125,7 @@ export default function Header() {
     >
       <div className={`container ${styles.inner}`}>
         {/* Logo / Salon Name */}
-        <Link href="/" className={styles.logo} aria-label="Home">
+        <Link id="nav-logo" href="/" className={styles.logo} aria-label="Home">
           <HiOutlineSparkles className={styles.logoIcon} size={18} />
           <span className={styles.logoText}>{salonName}</span>
         </Link>

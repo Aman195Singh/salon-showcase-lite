@@ -332,6 +332,42 @@ export default function FAQChatbot() {
 
     // 3. Keyword matching rules for direct answers
     if (
+      qLower.includes("home") ||
+      qLower.includes("landing") ||
+      qLower.includes("main page") ||
+      qLower.includes("front page")
+    ) {
+      return "You can return to the **Home / Landing page** anytime by clicking **Home** in the top navigation bar or tapping the salon brand logo in the top-left corner.";
+    }
+
+    if (
+      qLower.includes("profile icon") ||
+      qLower.includes("profile kahan") ||
+      qLower.includes("mera profile") ||
+      qLower.includes("avatar") ||
+      qLower.includes("profile pic") ||
+      (qLower.includes("profile") && (qLower.includes("kahan") || qLower.includes("icon") || qLower.includes("change")))
+    ) {
+      return "Your **Profile Icon** is located at the **top-right corner of the header navigation bar**.\n\n- **If Signed In:** Your photo or initials appear at the top-right (`#nav-profile`). Click it to open the account dropdown menu.\n- **If Not Signed In:** The **Sign In** button appears in the same top-right spot.\n- **To Change Profile Photo:** Go to your **Account** page (`/account`), select the **Profile Info** tab, and upload a new photo.\n- **To Change Password:** Go to `/account` and click on the **Change Password** tab.\n- **To Check Inquiries:** Go to `/account` and click on the **My Enquiries** tab.";
+    }
+
+    if (
+      qLower.includes("password") ||
+      qLower.includes("change pass") ||
+      qLower.includes("reset pass")
+    ) {
+      return "To change your password:\n\n1. Click your **Profile Icon** in the top-right header and select **My Account & Security** (or visit `/account`).\n2. Click on the **Change Password** tab (`#account-tab-security`).\n3. Enter your new password, confirm it, and click **Save Password**.";
+    }
+
+    if (
+      qLower.includes("inquir") ||
+      qLower.includes("enquir") ||
+      (qLower.includes("status") && qLower.includes("booking"))
+    ) {
+      return "To review your booking enquiries:\n\n- **Customers:** Visit your **Account** page (`/account`) and click the **My Enquiries** tab to see your booking requests and status.\n- **Salon Owners / Admins:** Open the **Admin Dashboard** (`/dashboard/enquiries`) to manage all incoming customer requests.";
+    }
+
+    if (
       qLower.includes("gallery") ||
       qLower.includes("photo") ||
       qLower.includes("look") ||
@@ -471,6 +507,38 @@ export default function FAQChatbot() {
       if (isExplicitGuidance(questionText)) {
         const qLower = questionText.toLowerCase();
         if (
+          qLower.includes("home") ||
+          qLower.includes("landing") ||
+          qLower.includes("main page") ||
+          qLower.includes("front page")
+        ) {
+          suggestedTour = "home";
+          suggestedPage = "/";
+        } else if (
+          qLower.includes("password") ||
+          qLower.includes("change pass") ||
+          qLower.includes("reset pass")
+        ) {
+          suggestedTour = "password";
+          suggestedPage = "/account";
+        } else if (
+          qLower.includes("inquir") ||
+          qLower.includes("enquir")
+        ) {
+          suggestedTour = "inquiries";
+          suggestedPage = "/account";
+        } else if (
+          qLower.includes("profile") ||
+          qLower.includes("avatar") ||
+          qLower.includes("account") ||
+          qLower.includes("login") ||
+          qLower.includes("signin") ||
+          qLower.includes("sign in") ||
+          qLower.includes("member")
+        ) {
+          suggestedTour = "profile";
+          suggestedPage = "/account";
+        } else if (
           qLower.includes("gallery") ||
           qLower.includes("photo") ||
           qLower.includes("look") ||
@@ -524,18 +592,27 @@ export default function FAQChatbot() {
         ) {
           suggestedTour = "about";
           suggestedPage = "/about";
-        } else if (
-          qLower.includes("account") ||
-          qLower.includes("login") ||
-          qLower.includes("signin") ||
-          qLower.includes("sign in") ||
-          qLower.includes("member")
-        ) {
-          suggestedTour = "account";
-          suggestedPage = "/login";
         } else {
-          suggestedTour = "services";
-          suggestedPage = "/services";
+          // If asked to guide generally, respect the user's current page!
+          if (pathname === "/gallery") {
+            suggestedTour = "gallery";
+            suggestedPage = "/gallery";
+          } else if (pathname === "/contact") {
+            suggestedTour = "contact";
+            suggestedPage = "/contact";
+          } else if (pathname === "/about") {
+            suggestedTour = "about";
+            suggestedPage = "/about";
+          } else if (pathname === "/account") {
+            suggestedTour = "profile";
+            suggestedPage = "/account";
+          } else if (pathname === "/") {
+            suggestedTour = "home";
+            suggestedPage = "/";
+          } else {
+            suggestedTour = "services";
+            suggestedPage = "/services";
+          }
         }
       }
 
@@ -561,6 +638,7 @@ export default function FAQChatbot() {
         body: JSON.stringify({
           message: questionText,
           sessionId: sessionId,
+          currentPage: pathname,
         }),
       });
 
